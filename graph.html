@@ -1,390 +1,383 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>FitGamify — Statistiques</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FitGamify – Statistiques</title>
 <style>
-  :root { --card-bg:#fff; --muted:#666; --soft:#f5f5f5; --ink:#111; --accent:#2962ff; --good:#20a162; }
-  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--soft); color: var(--ink); margin:0; padding:1rem; }
-  h1 { font-size: 1.5rem; margin: .5rem 0 1rem; }
-  .grid { display:grid; gap:1rem; }
-  .cards { grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); }
-  .card { background: var(--card-bg); border-radius: 10px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
-  .muted { color: var(--muted); }
-  .kpi { display:flex; flex-wrap:wrap; gap:.75rem; }
-  .kpi .item { background:#fafafa; border:1px solid #eee; border-radius:8px; padding:.6rem .75rem; min-width: 130px; }
-  .program { border-left: 4px solid var(--accent); padding-left:.75rem; margin:.25rem 0 1rem; }
-  .barwrap { display:flex; align-items:flex-end; gap:.35rem; height: 80px; padding:.5rem .25rem; background:#fafafa; border:1px solid #eee; border-radius:8px; }
-  .bar { width: 20px; background:linear-gradient(180deg, #7aa7ff, #2962ff); border-radius:4px 4px 0 0; display:flex; align-items:flex-end; justify-content:center; font-size:.7rem; color:white; }
-  .tbl { width:100%; border-collapse: collapse; }
-  .tbl th, .tbl td { text-align:left; padding:.45rem .4rem; border-bottom:1px solid #eee; font-size:.95rem; }
-  .chip { display:inline-block; font-size:.75rem; padding:.15rem .45rem; border-radius:999px; border:1px solid #eee; background:#fafafa; margin-left:.4rem; }
-  .small { font-size:.9rem; }
-  .empty { text-align:center; color:var(--muted); padding:1rem; background:#fafafa; border:1px dashed #ddd; border-radius:8px; }
-  .header { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
-  select { padding:.5rem .6rem; border:1px solid #ddd; border-radius:8px; background:white; }
-  .note { font-size:.85rem; color:var(--muted); }
+  :root{
+    --bg1:#0f1623; --bg2:#1b2433; --card:#121a28; --border:#273349;
+    --txt:#e8efff; --muted:#9fb2d3; --glow1:#6a8bff; --glow2:#b26bff;
+    --chip:#0f1725; --chipBorder:#243149; --btn:#3157ff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:18px; color:var(--txt);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:radial-gradient(1200px 600px at 10% -10%, #1f2a40 0%, transparent 60%),
+               linear-gradient(135deg, var(--bg1), var(--bg2));
+  }
+  .wrap{max-width:1100px; margin:0 auto; display:grid; gap:16px}
+  header{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+  h1{
+    margin:0; font-size:1.6rem;
+    background:linear-gradient(90deg,var(--glow1),var(--glow2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .nav{display:flex; gap:8px; flex-wrap:wrap}
+  .btn{
+    background:#263247; color:#e8efff; border:1px solid #3a4a67;
+    padding:.55rem .8rem; border-radius:10px; cursor:pointer; font-weight:600; text-decoration:none;
+  }
+  .btn.primary{ background:var(--btn); border-color:var(--btn) }
+  .card{
+    background:linear-gradient(180deg,#121a28,#0d1523);
+    border:1px solid var(--border); border-radius:16px; padding:16px;
+    box-shadow:0 10px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  h2{margin:.2rem 0 1rem; font-size:1.1rem}
+  .grid{display:grid; gap:16px}
+  @media(min-width:880px){ .grid{grid-template-columns:1fr 1fr} }
+  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .chip{
+    background:var(--chip); border:1px solid var(--chipBorder);
+    color:var(--txt); padding:.4rem .6rem; border-radius:999px; font-size:.95rem;
+  }
+  select{
+    background:#0f1725; color:var(--txt); border:1px solid #334155;
+    padding:10px 12px; border-radius:10px; outline:none;
+  }
+  .kpi{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px}
+  .kpi .box{
+    background:#0f1725; border:1px solid #243149; border-radius:12px; padding:12px;
+  }
+  .kpi .label{color:var(--muted); font-size:.9rem}
+  .kpi .value{font-size:1.3rem; font-weight:800}
+  canvas{background:transparent !important}
+  .muted{color:var(--muted)}
+  .empty{color:var(--muted); font-style:italic}
+  /* toast */
+  #toast{position:fixed; left:50%; transform:translateX(-50%); bottom:16px;
+         background:rgba(0,0,0,.85); color:#fff; padding:.6rem .9rem; border-radius:10px;
+         opacity:0; pointer-events:none; transition:opacity .2s; z-index:9999}
+  #toast.show{opacity:1}
 </style>
 </head>
 <body>
-  <div class="header">
-    <h1>📊 FitGamify — Statistiques</h1>
-    <div>
-      <select id="programFilter">
-        <option value="__all__">Tous les programmes</option>
-      </select>
+<div class="wrap">
+
+  <header>
+    <h1>📈 FitGamify – Statistiques</h1>
+    <div class="nav">
+      <a class="btn" href="index.html">🏠 Accueil</a>
+      <a class="btn" href="fitgamify.html">🏋️ Entraînement</a>
+      <button class="btn primary" id="refreshBtn">🔄 Recharger données</button>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <span class="chip">Source : localStorage.fitHistory</span>
+        <span class="chip" id="sessionCount">0 séance</span>
+      </div>
+      <div class="row">
+        <label for="programFilter" class="muted">Programme</label>
+        <select id="programFilter">
+          <option value="all">Tous</option>
+          <option value="Running">Running</option>
+          <option value="Full Body">Full Body</option>
+          <option value="Street Workout">Street Workout</option>
+        </select>
+        <label for="rangeFilter" class="muted">Période</label>
+        <select id="rangeFilter">
+          <option value="all">Tout</option>
+          <option value="30">30 jours</option>
+          <option value="90">90 jours</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="kpi" style="margin-top:10px">
+      <div class="box">
+        <div class="label">Séances totales</div>
+        <div class="value" id="kpiTotal">0</div>
+      </div>
+      <div class="box">
+        <div class="label">Moyenne / semaine</div>
+        <div class="value" id="kpiWeekAvg">–</div>
+      </div>
+      <div class="box">
+        <div class="label">Programme le plus fréquent</div>
+        <div class="value" id="kpiTopProg">–</div>
+      </div>
     </div>
   </div>
-  <p class="note">Ces statistiques sont calculées à partir de <code>localStorage.fitHistory</code> (format sauvegardé par ta page d’entraînement).</p>
 
-  <div class="grid cards" id="globalCards"></div>
-
-  <div id="programStats"></div>
-
-<script>
-/* ====== Parsing de l'historique (texte) ====== */
-function loadHistoryRaw() {
-  return localStorage.getItem("fitHistory") || "";
-}
-
-// Ex: "📅 14/08/2025, 11:23:45 – Programme : Full Body"
-const DATE_PROG_RE = /📅\s+(\d{1,2})\/(\d{1,2})\/(\d{4}).*?–\s*Programme\s*:\s*(.+)$/;
-// Ex force: "   ➤ Série 1 – 10 reps @ 50kg"
-const SET_RE = /Série\s+(\d+)\s+–\s+(\d+)\s+reps\s+@\s+([^\s]+)kg/i;
-// Ex running: "   ➤ Séance 1 – 5 km en 30 min"
-const RUN_RE = /Séance\s+(\d+)\s+–\s+([\d.,]+)\s*km\s+en\s+([\d.,]+)\s*min/i;
-// Titre exercice: "🔸 NomExo :"
-const EXO_RE = /^\s*🔸\s+(.*?):\s*$/;
-
-function parseHistory(raw) {
-  const lines = raw.split(/\r?\n/);
-  const sessions = [];
-  let current = null;
-  let currentExo = null;
-
-  for (let line of lines) {
-    if (!line.trim()) continue;
-
-    const mHead = line.match(DATE_PROG_RE);
-    if (mHead) {
-      const d = new Date(+mHead[3], (+mHead[2]-1), +mHead[1]); // yyyy, mm-1, dd
-      current = { date: d, dateStr: `${mHead[1]}/${mHead[2]}/${mHead[3]}`, program: mHead[4].trim(), exercises: [] };
-      sessions.push(current);
-      currentExo = null;
-      continue;
-    }
-    if (!current) continue;
-
-    const mExo = line.match(EXO_RE);
-    if (mExo) {
-      currentExo = { name: mExo[1].trim(), sets: [], runs: [] };
-      current.exercises.push(currentExo);
-      continue;
-    }
-
-    const mSet = line.match(SET_RE);
-    if (mSet && currentExo) {
-      currentExo.sets.push({
-        serie: +mSet[1],
-        reps: +mSet[2],
-        weight: toNumberOrNull(mSet[3]) // peut être "PDC" => null
-      });
-      continue;
-    }
-
-    const mRun = line.match(RUN_RE);
-    if (mRun && currentExo) {
-      currentExo.runs.push({
-        seance: +mRun[1],
-        km: toFloatSafe(mRun[2]),
-        min: toFloatSafe(mRun[3])
-      });
-      continue;
-    }
-  }
-  return sessions;
-}
-
-function toFloatSafe(s) {
-  if (typeof s !== "string") return s;
-  return parseFloat(s.replace(',', '.'));
-}
-function toNumberOrNull(s) {
-  const v = toFloatSafe(String(s));
-  return isNaN(v) ? null : v;
-}
-
-/* ====== Agrégation ====== */
-function groupByProgram(sessions) {
-  const map = {};
-  for (const s of sessions) {
-    const key = s.program;
-    if (!map[key]) map[key] = [];
-    map[key].push(s);
-  }
-  return map;
-}
-
-function isRunningSession(session) {
-  // if any exercise has runs entries with km => running-like
-  return session.exercises.some(ex => (ex.runs && ex.runs.length > 0));
-}
-
-/* Weekly buckets (last 8 weeks) */
-function weekKey(dt) {
-  // ISO week (simplifié) => year + week number
-  const date = new Date(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()));
-  // jeudi trick
-  const dayNum = (date.getUTCDay() + 6) % 7;
-  date.setUTCDate(date.getUTCDate() - dayNum + 3);
-  const firstThursday = new Date(Date.UTC(date.getUTCFullYear(),0,4));
-  const dayDiff = (date - firstThursday) / 86400000;
-  const week = 1 + Math.floor(dayDiff / 7);
-  return `${date.getUTCFullYear()}-W${String(week).padStart(2,'0')}`;
-}
-function lastNWeeksBuckets(sessions, n=8) {
-  const now = new Date();
-  // build labels for last n weeks ending current week
-  const labels = [];
-  const ref = new Date(now);
-  for (let i=0;i<n;i++) {
-    const wk = weekKey(ref);
-    if (!labels.includes(wk)) labels.unshift(wk);
-    ref.setDate(ref.getDate()-7);
-  }
-  const counts = Object.fromEntries(labels.map(l => [l,0]));
-  for (const s of sessions) {
-    const k = weekKey(s.date);
-    if (k in counts) counts[k]++;
-  }
-  return { labels, counts };
-}
-
-/* Stats calculators */
-function statsForProgram(sessions) {
-  // sessions are for one program
-  sessions.sort((a,b)=>b.date - a.date);
-  const now = new Date();
-  const d7 = now.getTime() - 7*86400000;
-  const d30 = now.getTime() - 30*86400000;
-
-  const total = sessions.length;
-  const last7 = sessions.filter(s => s.date.getTime() >= d7).length;
-  const last30 = sessions.filter(s => s.date.getTime() >= d30).length;
-
-  // detect type(s) dynamically in these sessions
-  let runCount = 0, runKmTotal = 0, runMinTotal = 0, bestPace = Infinity; // min/km (plus petit = meilleur)
-  let strengthSets = 0, volume = 0;
-  const bestByExercise = {}; // name -> max weight
-
-  for (const s of sessions) {
-    for (const ex of s.exercises) {
-      if (ex.runs && ex.runs.length) {
-        for (const r of ex.runs) {
-          runCount++;
-          runKmTotal += (r.km || 0);
-          runMinTotal += (r.min || 0);
-          if (r.km && r.min) {
-            const pace = r.min / r.km;
-            if (pace < bestPace) bestPace = pace;
-          }
-        }
-      }
-      if (ex.sets && ex.sets.length) {
-        for (const st of ex.sets) {
-          strengthSets++;
-          if (st.weight != null && !isNaN(st.weight) && st.reps != null) {
-            volume += st.weight * st.reps;
-            // best by exo
-            const prev = bestByExercise[ex.name] ?? -Infinity;
-            if (st.weight > prev) bestByExercise[ex.name] = st.weight;
-          }
-        }
-      }
-    }
-  }
-
-  const runAvgKm = runCount ? (runKmTotal / runCount) : 0;
-  const runAvgMin = runCount ? (runMinTotal / runCount) : 0;
-  const runAvgPace = (runKmTotal>0) ? (runMinTotal / runKmTotal) : 0;
-
-  const weekly = lastNWeeksBuckets(sessions, 8);
-
-  return {
-    total, last7, last30,
-    weekly,
-    run: {
-      count: runCount,
-      kmTotal: runKmTotal,
-      avgKm: runAvgKm,
-      avgMin: runAvgMin,
-      avgPace: runAvgPace,
-      bestPace: (bestPace===Infinity?0:bestPace)
-    },
-    strength: {
-      sets: strengthSets,
-      volume,
-      bestByExercise
-    }
-  };
-}
-
-/* ====== UI rendering ====== */
-function fmt(n, digits=1) {
-  return Number(n).toFixed(digits).replace('.', ',');
-}
-function paceToStr(paceMinPerKm) {
-  if (!paceMinPerKm || !isFinite(paceMinPerKm)) return "—";
-  const min = Math.floor(paceMinPerKm);
-  const sec = Math.round((paceMinPerKm - min) * 60);
-  return `${min}:${String(sec).padStart(2,'0')} /km`;
-}
-
-function renderGlobalCards(allSessions, progFilter="__all__") {
-  const box = document.getElementById("globalCards");
-  box.innerHTML = "";
-  // filtre
-  const sessions = (progFilter==="__all__") ? allSessions : allSessions.filter(s => s.program===progFilter);
-  if (!sessions.length) {
-    box.innerHTML = `<div class="card empty">Aucune donnée pour ce filtre.</div>`;
-    return;
-  }
-  const st = statsForProgram(sessions);
-
-  // KPI
-  const kpi = document.createElement("div");
-  kpi.className = "card";
-  kpi.innerHTML = `
-    <div class="program"><b>Vue ${progFilter==="__all__"?"globale":"programme"}</b> <span class="chip">${sessions.length} séance(s)</span></div>
-    <div class="kpi">
-      <div class="item"><div class="muted small">Sur 7 jours</div><div><b>${st.last7}</b> séance(s)</div></div>
-      <div class="item"><div class="muted small">Sur 30 jours</div><div><b>${st.last30}</b> séance(s)</div></div>
-      <div class="item"><div class="muted small">Total</div><div><b>${st.total}</b> séance(s)</div></div>
+  <div class="grid">
+    <div class="card">
+      <h2>📊 Répartition par programme</h2>
+      <canvas id="mixChart" height="160"></canvas>
+      <div class="muted" id="mixLegend" style="margin-top:8px"></div>
     </div>
-  `;
-  box.appendChild(kpi);
 
-  // Histogramme hebdo
-  const hist = document.createElement("div");
-  hist.className = "card";
-  const maxVal = Math.max(...Object.values(st.weekly.counts), 1);
-  const bars = st.weekly.labels.map(label => {
-    const v = st.weekly.counts[label];
-    const h = Math.round((v/maxVal)*100);
-    const short = label.replace(/^.*W/, "W"); // show W##
-    return `<div class="bar" style="height:${h}%;" title="${label} : ${v}">${v?'<span style="font-size:.65rem;padding-bottom:2px">'+v+'</span>':''}</div>`;
-  }).join("");
-  hist.innerHTML = `
-    <div class="muted small" style="margin-bottom:.5rem;">Séances / semaine (8 dernières semaines)</div>
-    <div class="barwrap">${bars}</div>
-    <div class="muted small" style="margin-top:.25rem;">${st.weekly.labels.map(l=>l.replace(/^.*W/,'W')).join('  ')}</div>
-  `;
-  box.appendChild(hist);
+    <div class="card">
+      <h2>🏃 Running – Distance par séance</h2>
+      <canvas id="runDistChart" height="160"></canvas>
+      <div class="muted" id="runSummary" style="margin-top:8px"></div>
+    </div>
 
-  // Bloc Running si pertinent
-  const hasRun = st.run.count > 0;
-  if (hasRun) {
-    const run = document.createElement("div");
-    run.className = "card";
-    run.innerHTML = `
-      <div class="program"><b>🏃 Running</b> <span class="chip">${st.run.count} sortie(s)</span></div>
-      <div class="kpi">
-        <div class="item"><div class="muted small">Kilométrage total</div><div><b>${fmt(st.run.kmTotal,1)}</b> km</div></div>
-        <div class="item"><div class="muted small">Distance moyenne</div><div><b>${fmt(st.run.avgKm,1)}</b> km</div></div>
-        <div class="item"><div class="muted small">Temps moyen</div><div><b>${fmt(st.run.avgMin,1)}</b> min</div></div>
-        <div class="item"><div class="muted small">Allure moyenne</div><div><b>${paceToStr(st.run.avgPace)}</b></div></div>
-        <div class="item"><div class="muted small">Meilleure allure</div><div><b>${paceToStr(st.run.bestPace)}</b></div></div>
-      </div>
-    `;
-    box.appendChild(run);
+    <div class="card">
+      <h2>🏃 Running – Vitesse (min/km)</h2>
+      <canvas id="runPaceChart" height="160"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>🏃 Running – Distance par semaine</h2>
+      <canvas id="runWeekChart" height="160"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>🏋️ Volume (reps × kg) par séance</h2>
+      <canvas id="volChart" height="180"></canvas>
+      <div class="muted" id="volSummary" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <h2>🗂️ Dernières séances (résumé)</h2>
+      <div id="lastList" class="muted"></div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+/* ========= Helpers ========= */
+const $ = id => document.getElementById(id);
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1200); }
+function parseDateFromHeader(line){
+  // line ex: "📅 19/08/2025, 14:20:10 – Programme : Running"
+  try{
+    const raw = line.split('–')[0].replace('📅','').trim();
+    const d = new Date(raw);
+    if(!isNaN(d.getTime())) return d;
+  }catch(e){}
+  // fallback: now (keeps order roughly)
+  return new Date();
+}
+function weekKey(d){ const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const day=dt.getUTCDay(); const diff=(day+6)%7; dt.setUTCDate(dt.getUTCDate()-diff); const y=dt.getUTCFullYear(); const m=String(dt.getUTCMonth()+1).padStart(2,'0'); const da=String(dt.getUTCDate()).padStart(2,'0'); return `${y}-${m}-${da}`;}
+function avg(arr){ return arr.length? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+function round2(x){ return Math.round(x*100)/100; }
+
+/* ========= Parse history ========= */
+// History format from fitgamify.html
+// Entry:
+// 📅 <date> – Programme : <name>
+// 🔸 <exo> :
+//    ➤ Série X – <reps> reps @ <kg>kg
+// or for running:
+//    ➤ Séance X – <dist> km en <min> min
+function getHistoryRaw(){
+  const h = localStorage.getItem('fitHistory') || "";
+  return h.trim();
+}
+function parseHistory(filterProg='all', rangeDays='all'){
+  const raw = getHistoryRaw();
+  if(!raw) return [];
+
+  let entries = raw.split("\n\n").map(block=>{
+    const lines = block.split("\n").map(s=>s.trim()).filter(Boolean);
+    if(!lines.length) return null;
+    const header = lines[0];
+    const program = (header.split('Programme :')[1]||'').trim();
+    const date = parseDateFromHeader(header);
+    const dataLines = lines.slice(1);
+
+    const rec = { header, program, date, running:[], lifts:[], volume:0, text:block };
+    // parse lines
+    const runRe = /Séance\s+\d+\s+–\s*([\d.,]+)\s*km\s*en\s*([\d.,]+)\s*min/i;
+    const liftRe = /Série\s+\d+\s+–\s*([\d.,]+)\s*reps\s*@\s*([\d.,]+)\s*kg/i;
+
+    dataLines.forEach(line=>{
+      let m = runRe.exec(line);
+      if(m){
+        const dist = parseFloat(m[1].replace(',','.'));
+        const min = parseFloat(m[2].replace(',','.'));
+        if(!isNaN(dist) && !isNaN(min)){
+          rec.running.push({dist, min});
+        }
+        return;
+      }
+      m = liftRe.exec(line);
+      if(m){
+        const reps = parseFloat(m[1].replace(',','.'));
+        const kg   = parseFloat(m[2].replace(',','.'));
+        if(!isNaN(reps) && !isNaN(kg)){
+          rec.lifts.push({reps, kg});
+          rec.volume += reps*kg;
+        }
+      }
+    });
+    return rec;
+  }).filter(Boolean);
+
+  // filter by program
+  if(filterProg !== 'all'){
+    entries = entries.filter(e => e.program === filterProg);
+  }
+  // filter by range
+  if(rangeDays !== 'all'){
+    const days = parseInt(rangeDays,10);
+    const minTime = Date.now() - days*24*3600*1000;
+    entries = entries.filter(e => e.date.getTime() >= minTime);
   }
 
-  // Bloc Force si pertinent
-  const hasStrength = st.strength.sets > 0;
-  if (hasStrength) {
-    const str = document.createElement("div");
-    str.className = "card";
-    const bestRows = Object.keys(st.strength.bestByExercise).sort().map(name => {
-      const w = st.strength.bestByExercise[name];
-      return `<tr><td>${name}</td><td>${w!=null && isFinite(w) ? fmt(w,1)+' kg' : '—'}</td></tr>`;
-    }).join("") || `<tr><td colspan="2" class="muted">Aucune charge chiffrée détectée</td></tr>`;
-    str.innerHTML = `
-      <div class="program"><b>🏋️ Force / Volume</b></div>
-      <div class="kpi">
-        <div class="item"><div class="muted small">Séries totales</div><div><b>${st.strength.sets}</b></div></div>
-        <div class="item"><div class="muted small">Volume total</div><div><b>${fmt(st.strength.volume,0)}</b> kg·reps</div></div>
-      </div>
-      <div style="margin-top:.5rem;">
-        <div class="muted small" style="margin:.25rem 0 .4rem;">Meilleures charges par exercice</div>
-        <table class="tbl">
-          <thead><tr><th>Exercice</th><th>Best</th></tr></thead>
-          <tbody>${bestRows}</tbody>
-        </table>
-      </div>
-    `;
-    box.appendChild(str);
-  }
+  // sort by date asc
+  entries.sort((a,b)=> a.date - b.date);
+  return entries;
 }
 
-function renderPerProgram(allSessions) {
-  const container = document.getElementById("programStats");
-  container.innerHTML = "";
-
-  const byProg = groupByProgram(allSessions);
-  const names = Object.keys(byProg).sort((a,b)=>a.localeCompare(b,'fr'));
-  if (!names.length) {
-    container.innerHTML = `<div class="card empty">Aucun programme détecté pour l’instant.</div>`;
-    return;
-  }
-
-  for (const name of names) {
-    const sessions = byProg[name].slice().sort((a,b)=>b.date - a.date);
-    const st = statsForProgram(sessions);
-
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="program"><b>${name}</b> <span class="chip">${sessions.length} séance(s)</span></div>
-      <div class="kpi" style="margin-bottom:.5rem;">
-        <div class="item"><div class="muted small">Sur 7 jours</div><div><b>${st.last7}</b></div></div>
-        <div class="item"><div class="muted small">Sur 30 jours</div><div><b>${st.last30}</b></div></div>
-      </div>
-      <div class="muted small" style="margin:.25rem 0 .4rem;">Dernières séances (récent → ancien)</div>
-      ${renderRecentList(sessions.slice(0,6))}
-    `;
-    container.appendChild(card);
-  }
+/* ========= Charts ========= */
+let charts = {};
+function destroyCharts(){
+  Object.values(charts).forEach(ch=> ch && ch.destroy());
+  charts = {};
 }
 
-function renderRecentList(sessions) {
-  if (!sessions.length) return `<div class="empty">Pas encore de séance.</div>`;
-  const items = sessions.map(s => {
-    const kind = isRunningSession(s) ? "🏃" : "🏋️";
-    return `<div class="small">• ${s.dateStr} ${kind} — ${s.program}</div>`;
-  }).join("");
-  return `<div>${items}</div>`;
+function buildCharts(entries){
+  destroyCharts();
+
+  // Mix par programme
+  const mix = {};
+  entries.forEach(e => mix[e.program] = (mix[e.program]||0)+1);
+  const mixL = Object.keys(mix);
+  const mixV = mixL.map(k=>mix[k]);
+
+  charts.mix = new Chart($('mixChart'), {
+    type:'doughnut',
+    data:{ labels:mixL, datasets:[{ data:mixV }] },
+    options:{
+      plugins:{
+        legend:{ labels:{ color:'#cfe3ff' } }
+      }
+    }
+  });
+  $('mixLegend').textContent = mixL.length ? mixL.map((k,i)=>`${k}: ${mixV[i]}`).join(' • ') : "Pas de données";
+
+  // Running charts
+  const runEntries = entries.filter(e => e.program==='Running' && e.running.length);
+  const runLabels = runEntries.map(e => e.date.toLocaleDateString());
+  const runDistances = runEntries.map(e => e.running.reduce((s,r)=>s+r.dist,0));
+  const runPaces = runEntries.map(e => {
+    const dist = e.running.reduce((s,r)=>s+r.dist,0);
+    const minutes = e.running.reduce((s,r)=>s+r.min,0);
+    return dist>0 ? minutes/dist : NaN;
+  });
+
+  charts.runDist = new Chart($('runDistChart'), {
+    type:'line',
+    data:{ labels:runLabels, datasets:[{ label:'km', data:runDistances, tension:.25 }] },
+    options:{ scales:{ x:{ ticks:{ color:'#9fb2d3' } }, y:{ ticks:{ color:'#9fb2d3' } } },
+              plugins:{ legend:{ labels:{ color:'#cfe3ff' } } } }
+  });
+
+  charts.runPace = new Chart($('runPaceChart'), {
+    type:'line',
+    data:{ labels:runLabels, datasets:[{ label:'min/km', data:runPaces, tension:.25 }] },
+    options:{ scales:{ x:{ ticks:{ color:'#9fb2d3' } }, y:{ ticks:{ color:'#9fb2d3' } } },
+              plugins:{ legend:{ labels:{ color:'#cfe3ff' } } } }
+  });
+
+  // Running weekly distance
+  const weekMap = {};
+  runEntries.forEach(e=>{
+    const wk = weekKey(e.date);
+    weekMap[wk] = (weekMap[wk]||0) + e.running.reduce((s,r)=>s+r.dist,0);
+  });
+  const weekLabels = Object.keys(weekMap).sort();
+  const weekVals = weekLabels.map(k=>weekMap[k]);
+
+  charts.runWeek = new Chart($('runWeekChart'), {
+    type:'bar',
+    data:{ labels:weekLabels, datasets:[{ label:'km / semaine', data:weekVals }] },
+    options:{ scales:{ x:{ ticks:{ color:'#9fb2d3' } }, y:{ ticks:{ color:'#9fb2d3' } } },
+              plugins:{ legend:{ labels:{ color:'#cfe3ff' } } } }
+  });
+
+  // Strength volume per session (Full Body + Street Workout)
+  const strEntries = entries.filter(e => e.volume>0);
+  const volLabels = strEntries.map(e => `${e.program} ${e.date.toLocaleDateString()}`);
+  const volValues = strEntries.map(e => round2(e.volume));
+  charts.vol = new Chart($('volChart'), {
+    type:'bar',
+    data:{ labels:volLabels, datasets:[{ label:'Volume (reps×kg)', data:volValues }] },
+    options:{ indexAxis:'y',
+      scales:{ x:{ ticks:{ color:'#9fb2d3' } }, y:{ ticks:{ color:'#9fb2d3' } } },
+      plugins:{ legend:{ labels:{ color:'#cfe3ff' } } }
+    }
+  });
+
+  // Summaries
+  const totalRuns = runEntries.length;
+  const sumKm = runDistances.reduce((a,b)=>a+b,0);
+  const avgKm = totalRuns ? round2(sumKm/totalRuns) : 0;
+  const avgPace = runPaces.filter(x=>!isNaN(x)).length ? round2(avg(runPaces.filter(x=>!isNaN(x)))) : 0;
+  $('runSummary').textContent = totalRuns ? `Séances running: ${totalRuns} • Total: ${round2(sumKm)} km • Moy: ${avgKm} km • Vitesse moy: ${avgPace} min/km` : "Aucune donnée running";
+
+  const avgVol = strEntries.length ? round2(avg(volValues)) : 0;
+  $('volSummary').textContent = strEntries.length ? `Séances force: ${strEntries.length} • Volume moyen: ${avgVol}` : "Aucune donnée force";
 }
 
-/* ====== Initialisation & filtre ====== */
-function init() {
-  const raw = loadHistoryRaw();
-  const sessions = parseHistory(raw);
-  // Remplir le filtre programme
-  const byProg = groupByProgram(sessions);
-  const sel = document.getElementById("programFilter");
-  sel.innerHTML = `<option value="__all__">Tous les programmes</option>` +
-                  Object.keys(byProg).sort((a,b)=>a.localeCompare(b,'fr'))
-                    .map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
-  sel.onchange = () => renderGlobalCards(sessions, sel.value);
-  // Rendus
-  renderGlobalCards(sessions, "__all__");
-  renderPerProgram(sessions);
+function rebuildKPIs(entries){
+  $('kpiTotal').textContent = entries.length;
+  // moyenne hebdo
+  if(!entries.length){ $('kpiWeekAvg').textContent = '–'; $('kpiTopProg').textContent='–'; return; }
+  const min = entries[0].date.getTime(), max = entries[entries.length-1].date.getTime();
+  const weeks = Math.max(1, (max-min)/(7*24*3600*1000));
+  $('kpiWeekAvg').textContent = (entries.length/weeks).toFixed(1);
+
+  const freq = {};
+  entries.forEach(e => freq[e.program]=(freq[e.program]||0)+1);
+  const top = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0];
+  $('kpiTopProg').textContent = top ? `${top[0]} (${top[1]})` : '–';
+
+  $('sessionCount').textContent = `${entries.length} ${entries.length>1?'séances':'séance'}`;
 }
 
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]))}
+function rebuildLast(entries){
+  const zone = $('lastList'); zone.innerHTML="";
+  if(!entries.length){ zone.innerHTML = `<div class="empty">Aucune séance trouvée.</div>`; return; }
+  const last = [...entries].slice(-8).reverse();
+  last.forEach(e=>{
+    const div = document.createElement('div');
+    div.style.borderTop = '1px dashed #2b3952';
+    div.style.padding = '8px 0';
+    div.innerHTML = `<b>${e.program}</b> • ${e.date.toLocaleDateString()}<br><span class="muted">${e.header}</span>`;
+    zone.appendChild(div);
+  });
+}
 
-init();
+/* ========= Build all ========= */
+function rebuildAll(){
+  const prog = $('programFilter').value;
+  const range = $('rangeFilter').value;
+  const entries = parseHistory(prog, range);
+  rebuildKPIs(entries);
+  buildCharts(entries);
+  rebuildLast(entries);
+}
+
+/* ========= Events ========= */
+$('programFilter').addEventListener('change', rebuildAll);
+$('rangeFilter').addEventListener('change', rebuildAll);
+$('refreshBtn').addEventListener('click', ()=>{ toast('Rechargé'); rebuildAll(); });
+
+/* ========= Init ========= */
+rebuildAll();
 </script>
 </body>
 </html>
