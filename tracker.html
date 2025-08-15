@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Suivi Hydratation + Journal</title>
+<style>
+  :root{
+    --bg:#0f1623; --card:#1b2433; --text:#cfe3ff; --muted:#8aa0c2;
+    --accent1:#6a8bff; --accent2:#b26bff; --good:#22c55e; --warn:#f59e0b;
+    --seg-empty:#334155; --seg-full:#3ba0ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--text); padding:16px}
+  .wrap{max-width:820px; margin:0 auto; display:grid; gap:16px}
+  .card{
+    background:var(--card);
+    border-radius:18px;
+    padding:20px 18px;
+    position:relative;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+    overflow:hidden;
+  }
+  .card::before{content:""; position:absolute; top:0; left:0; right:0; height:8px; background:linear-gradient(90deg,var(--accent1),var(--accent2));}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+  .title{letter-spacing:.18em; font-weight:700; color:#a9bbdb; margin:6px 0 14px}
+  .liters{font-size:44px; font-weight:900; line-height:1}
+  .sub{color:var(--muted); margin:8px 0 12px}
+  .segrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+  .seg{width:70px; height:12px; border-radius:999px; background:var(--seg-empty); cursor:pointer; position:relative; transition:transform .05s ease;}
+  .seg.full{ background:linear-gradient(180deg,#6dd3ff,var(--seg-full)); }
+  .seg:active{ transform:scale(.98) }
+  .controls{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px}
+  button{
+    background:#263247; color:#dbe7ff; border:1px solid #3a4a67; padding:10px 12px;
+    border-radius:10px; cursor:pointer; font-weight:600;
+  }
+  button.primary{background:#3157ff; border-color:#3157ff}
+  button.good{background:var(--good); border-color:transparent; color:#09210f}
+  button.warn{background:#3a2a12; border-color:#6b4e14; color:#ffde9a}
+  .tiny{font-size:.9rem; color:var(--muted)}
+  .dateNav{display:flex; align-items:center; gap:8px}
+  .dateNav button{width:38px; height:38px; padding:0; border-radius:8px}
+  .settings{margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .field{display:flex; flex-direction:column; gap:6px}
+  input[type=number]{background:#0f1725; color:#dbe7ff; border:1px solid #334155; padding:10px 12px; border-radius:10px}
+  /* Journal */
+  textarea{
+    width:100%; min-height:160px; background:#0f1725; color:#dbe7ff; border:1px solid #334155;
+    border-radius:12px; padding:12px; resize:vertical; font-size:1rem; line-height:1.4;
+  }
+  .journal-actions{display:flex; gap:8px; align-items:center; justify-content:space-between; margin-top:10px; flex-wrap:wrap}
+  .right{display:flex; gap:8px; align-items:center}
+  .list{display:grid; gap:8px; max-height:240px; overflow:auto; padding-right:4px}
+  .item{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px; background:#0f1725; border:1px solid #253149; border-radius:10px; cursor:pointer}
+  .item:hover{border-color:#3a4a67}
+  .snippet{color:#9fb4d6; font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%}
+  @media(max-width:560px){ .seg{width:calc((100vw - 16px*2 - 10px*5)/6)} }
+  /* Toast */
+  #toast{position:fixed; left:50%; transform:translateX(-50%); bottom:16px;
+         background:rgba(0,0,0,.85); color:#fff; padding:.6rem .9rem; border-radius:10px;
+         opacity:0; pointer-events:none; transition:opacity .2s; z-index:9999}
+  #toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Hydratation -->
+  <div class="card">
+    <div class="row">
+      <div style="display:flex; align-items:center; gap:12px">
+        <!-- Goutte -->
+        <svg width="56" height="56" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <path d="M24 4C24 4 10 19 10 28a14 14 0 1 0 28 0C38 19 24 4 24 4z" fill="#3dd0ff"/>
+          <path d="M18.5 21.5c-1.7 3.1-2.2 6.8-1.2 10.2" stroke="#bff1ff" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <div class="title">EAU CONSOMMÉE</div>
+          <div class="liters"><span id="litVal">0.0</span> L</div>
+          <div class="sub">Objectif : <b><span id="goalLabel">3</span> L</b> &nbsp;|&nbsp; Touchez pour enregistrer</div>
+        </div>
+      </div>
+      <div class="dateNav">
+        <button id="prevDay" title="Jour précédent">◀</button>
+        <div class="tiny" id="dateLabel"></div>
+        <button id="nextDay" title="Jour suivant">▶</button>
+      </div>
+    </div>
+
+    <div class="segrow" id="segments"></div>
+
+    <div class="controls">
+      <button id="minus1">– 1 verre</button>
+      <button id="plus1" class="primary">+ 1 verre</button>
+      <button id="saveBtn" class="good">💾 Enregistrer</button>
+      <button id="resetBtn" class="warn">↺ Réinitialiser le jour</button>
+    </div>
+
+    <div class="settings">
+      <div class="field">
+        <label for="glassMl">Taille d’un verre (ml)</label>
+        <input type="number" id="glassMl" min="50" step="50" value="250"/>
+      </div>
+      <div class="field">
+        <label for="goalL">Objectif (L)</label>
+        <input type="number" id="goalL" min="0.5" step="0.5" value="3"/>
+      </div>
+    </div>
+
+    <div class="tiny" style="margin-top:10px">
+      Astuce : touchez un segment pour le remplir. Touchez le dernier plein pour le vider.
+    </div>
+  </div>
+
+  <!-- Journal de bord -->
+  <div class="card">
+    <div class="title">JOURNAL DE BORD</div>
+    <div class="row" style="margin-bottom:8px">
+      <div class="tiny">Écris tes pensées du jour. Sauvegarde <b>par date</b>.</div>
+      <div class="tiny" id="charCount">0 caractère</div>
+    </div>
+    <textarea id="noteBox" placeholder="Ex : ressentis, idées, gratitude, leçon du jour…"></textarea>
+    <div class="journal-actions">
+      <div class="tiny">Les notes sont liées à la date sélectionnée en haut.</div>
+      <div class="right">
+        <button id="clearNote" class="warn">🧹 Effacer la note du jour</button>
+        <button id="saveNote" class="good">💾 Enregistrer la note</button>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="tiny" style="margin-bottom:6px">Historique des dernières notes</div>
+      <div id="noteList" class="list"></div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ---------- State ---------- */
+const LS_KEY = "waterTrackerV1";
+const state = loadState();
+let currentDate = new Date(); // date affichée
+function ymd(d){ return d.toISOString().slice(0,10); }
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return { settings:{glassMl:250, goalLiters:3}, days:{} };
+    const obj = JSON.parse(raw);
+    obj.settings = obj.settings || {glassMl:250, goalLiters:3};
+    obj.days = obj.days || {};
+    return obj;
+  }catch(e){
+    console.warn("State reset (parse error).",e);
+    return { settings:{glassMl:250, goalLiters:3}, days:{} };
+  }
+}
+function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+/* ---------- UI helpers ---------- */
+const el = id => document.getElementById(id);
+function toast(msg){
+  const t=el('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1400);
+}
+function setDateLabel(){
+  const d=currentDate;
+  el('dateLabel').textContent = d.toLocaleDateString(undefined,{weekday:'short', year:'numeric', month:'short', day:'numeric'});
+}
+function updateCharCount(){
+  const n = el('noteBox').value.length;
+  el('charCount').textContent = n + (n>1?' caractères':' caractère');
+}
+
+/* ---------- Day data ---------- */
+function getDayData(dateKey){
+  return state.days[dateKey] || { consumedMl:0, note:"" };
+}
+function setDayData(dateKey, data){
+  state.days[dateKey] = data;
+  saveState();
+}
+
+/* ---------- Hydratation ---------- */
+function fmtL(vMl){ return (vMl/1000).toFixed(1).replace('.', ','); }
+
+function renderHydra(){
+  el('glassMl').value = state.settings.glassMl;
+  el('goalL').value = state.settings.goalLiters;
+  el('goalLabel').textContent = state.settings.goalLiters;
+
+  const dateKey = ymd(currentDate);
+  const day = getDayData(dateKey);
+
+  const segCount = Math.max(1, Math.round(state.settings.goalLiters*1000 / state.settings.glassMl));
+  const filled = Math.floor(day.consumedMl / state.settings.glassMl);
+
+  el('litVal').textContent = (day.consumedMl/1000).toFixed(1).replace('.', ',');
+  setDateLabel();
+
+  const box = el('segments'); box.innerHTML = "";
+  for(let i=0;i<segCount;i++){
+    const s = document.createElement('div');
+    s.className = 'seg' + (i < filled ? ' full':'');
+    s.title = `Verre ${i+1}/${segCount}`;
+    s.addEventListener('click', ()=>onSegmentClick(i, filled));
+    box.appendChild(s);
+  }
+}
+function onSegmentClick(index, currentFilled){
+  const dateKey = ymd(currentDate);
+  const day = getDayData(dateKey);
+  const {glassMl} = state.settings;
+  if(index === currentFilled-1) day.consumedMl = Math.max(0, day.consumedMl - glassMl);
+  else                           day.consumedMl = (index+1) * glassMl;
+  setDayData(dateKey, day);
+  renderHydra();
+}
+function addGlass(n){
+  const dateKey = ymd(currentDate);
+  const day = getDayData(dateKey);
+  const {glassMl, goalLiters} = state.settings;
+  day.consumedMl = Math.max(0, day.consumedMl + n*glassMl);
+  const maxMl = Math.round(goalLiters*1000*1.5); // cap 150% objectif
+  day.consumedMl = Math.min(Math.max(0, day.consumedMl), maxMl);
+  setDayData(dateKey, day);
+  renderHydra();
+}
+
+/* ---------- Journal ---------- */
+function renderJournal(){
+  const dateKey = ymd(currentDate);
+  const day = getDayData(dateKey);
+  el('noteBox').value = day.note || "";
+  updateCharCount();
+  renderNoteList();
+}
+function saveNote(){
+  const dateKey = ymd(currentDate);
+  const day = getDayData(dateKey);
+  day.note = el('noteBox').value;
+  setDayData(dateKey, day);
+  toast("💾 Note enregistrée");
+  renderNoteList();
+}
+function clearNote(){
+  const dateKey = ymd(currentDate);
+  const day = getDayData(dateKey);
+  day.note = "";
+  setDayData(dateKey, day);
+  el('noteBox').value = "";
+  updateCharCount();
+  toast("🧹 Note effacée pour ce jour");
+  renderNoteList();
+}
+function renderNoteList(){
+  // construit la liste des dates ayant une note non vide (10 plus récentes)
+  const entries = Object.entries(state.days)
+    .filter(([,v]) => v && v.note && v.note.trim().length)
+    .map(([k,v]) => ({date:k, text:v.note.trim()}))
+    .sort((a,b)=> a.date < b.date ? 1 : -1)  // récent → ancien
+    .slice(0,10);
+
+  const box = el('noteList'); box.innerHTML = "";
+  if(!entries.length){
+    box.innerHTML = `<div class="tiny">Aucune note pour l’instant.</div>`;
+    return;
+  }
+  for(const e of entries){
+    const div = document.createElement('div');
+    div.className = "item";
+    const dt = new Date(e.date+"T12:00:00");
+    div.innerHTML = `
+      <div><b>${dt.toLocaleDateString()}</b></div>
+      <div class="snippet">${e.text}</div>
+    `;
+    div.addEventListener('click', ()=>{
+      // navigue vers la date de la note
+      currentDate = new Date(e.date+"T12:00:00");
+      renderHydra();
+      renderJournal();
+      toast("📅 Ouvert : " + dt.toLocaleDateString());
+    });
+    box.appendChild(div);
+  }
+}
+
+/* ---------- Events ---------- */
+el('minus1').onclick = ()=> addGlass(-1);
+el('plus1').onclick  = ()=> addGlass(1);
+el('saveBtn').onclick= ()=>{ saveState(); toast("💾 Hydratation enregistrée"); };
+el('resetBtn').onclick= ()=>{
+  const dateKey = ymd(currentDate);
+  const d = getDayData(dateKey); d.consumedMl=0; setDayData(dateKey,d);
+  renderHydra(); toast("Jour remis à zéro");
+};
+el('glassMl').addEventListener('change', e=>{
+  const v = Math.max(50, Number(e.target.value)||250);
+  state.settings.glassMl = v; saveState(); renderHydra();
+});
+el('goalL').addEventListener('change', e=>{
+  const v = Math.max(0.5, Number(e.target.value)||3);
+  state.settings.goalLiters = v; saveState(); renderHydra();
+});
+el('prevDay').onclick = ()=>{ currentDate.setDate(currentDate.getDate()-1); renderHydra(); renderJournal(); };
+el('nextDay').onclick = ()=>{ currentDate.setDate(currentDate.getDate()+1); renderHydra(); renderJournal(); };
+
+el('saveNote').onclick = saveNote;
+el('clearNote').onclick = clearNote;
+
+// Auto-save avec debounce
+let noteTimer=null;
+el('noteBox').addEventListener('input', ()=>{
+  updateCharCount();
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(saveNote, 1000);
+});
+
+/* ---------- Init ---------- */
+renderHydra();
+renderJournal();
+</script>
+
+</body>
+</html>
