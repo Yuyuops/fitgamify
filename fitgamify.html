@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FitGamify – Entraînement</title>
+<title>FitGamify – Entraînement + Créateur</title>
 <style>
   :root{
     --bg1:#0f1623; --bg2:#1b2433; --card:#121a28; --border:#273349;
     --txt:#e8efff; --muted:#9fb2d3; --glow1:#6a8bff; --glow2:#b26bff;
-    --btn:#3157ff; --btnText:#e8efff; --success:#22c55e; --danger:#e53935;
+    --btn:#3157ff; --btn2:#263247; --good:#22c55e; --danger:#e53935;
   }
   *{box-sizing:border-box}
   body{
@@ -17,23 +17,31 @@
     background:radial-gradient(1200px 600px at 10% -10%, #1f2a40 0%, transparent 60%),
                linear-gradient(135deg, var(--bg1), var(--bg2));
   }
-  .wrap{max-width:920px; margin:0 auto; display:grid; gap:14px}
-  header{display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .wrap{max-width:980px; margin:0 auto; display:grid; gap:14px}
+  header{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
   h1{
     margin:0; font-size:1.6rem;
     background:linear-gradient(90deg,var(--glow1),var(--glow2));
     -webkit-background-clip:text; -webkit-text-fill-color:transparent;
   }
   .quote{color:var(--muted); font-style:italic; margin:.2rem 0 1rem}
+  .btn{
+    background:var(--btn2); color:#e8efff; border:1px solid #3a4a67;
+    padding:.55rem .8rem; border-radius:10px; cursor:pointer; font-weight:600; text-decoration:none;
+  }
+  .btn.primary{ background:var(--btn); border-color:var(--btn) }
+  .btn.good{ background:var(--good); border-color:transparent; color:#0b2a13 }
+  .btn.danger{ background:var(--danger); border-color:transparent }
+  .btn:disabled{opacity:.6; cursor:default}
   .card{
     background:linear-gradient(180deg,#121a28,#0d1523);
     border:1px solid var(--border); border-radius:16px; padding:16px;
     box-shadow:0 10px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03);
   }
   h2{margin:.2rem 0 1rem; font-size:1.1rem}
-  select, input[type="number"], input[type="text"]{
+  select, input[type="number"], input[type="text"], textarea{
     background:#0f1725; color:var(--txt); border:1px solid #334155;
-    padding:10px 12px; border-radius:10px; outline:none;
+    padding:10px 12px; border-radius:10px; outline:none; width:100%;
   }
   .exercise-entry{
     background:#0f1725; border:1px solid #243149; border-radius:12px;
@@ -41,29 +49,34 @@
   }
   .series-row{display:flex; flex-direction:column; gap:8px; margin:.3rem 0}
   @media(min-width:520px){ .series-row{flex-direction:row; align-items:center} }
-  .btn{
-    background:#263247; color:var(--btnText); border:1px solid #3a4a67;
-    padding:.55rem .8rem; border-radius:10px; cursor:pointer; font-weight:600;
-  }
-  .btn.primary{ background:var(--btn); border-color:var(--btn) }
-  .btn.success{ background:var(--success); border-color:transparent; color:#0a2a13 }
-  .btn.danger{ background:var(--danger); border-color:transparent }
-  .btn:disabled{ opacity:.6; cursor:default }
   .timer{color:var(--muted); font-size:.9rem; margin-left:.4rem}
-  #history{
-    max-height:320px; overflow:auto; display:grid; gap:8px;
-  }
-  .hist-item{
-    display:flex; gap:10px; align-items:flex-start;
-    background:#0f1725; border:1px solid #243149; border-radius:10px; padding:10px;
-  }
+  #history{max-height:320px; overflow:auto; display:grid; gap:8px}
+  .hist-item{display:flex; gap:10px; align-items:flex-start; background:#0f1725; border:1px solid #243149; border-radius:10px; padding:10px}
   .hist-item pre{margin:0; white-space:pre-wrap; color:#cfe3ff}
   .right{margin-left:auto; display:flex; gap:8px}
-  /* toast */
-  #toast{position:fixed; left:50%; transform:translateX(-50%); bottom:16px;
-         background:rgba(0,0,0,.85); color:#fff; padding:.6rem .9rem; border-radius:10px;
-         opacity:0; pointer-events:none; transition:opacity .2s; z-index:9999}
-  #toast.show{opacity:1}
+  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .muted{color:var(--muted)}
+
+  /* Créateur */
+  .creator-grid{display:grid; gap:10px}
+  @media(min-width:780px){ .creator-grid{grid-template-columns:1fr 1fr} }
+  .creator-block{background:#0f1725; border:1px solid #243149; border-radius:12px; padding:12px}
+  .mini{font-size:.9rem; color:var(--muted)}
+  .bank{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+  .bank > button{font-size:.85rem}
+
+  /* Modal image */
+  .modal{
+    position:fixed; inset:0; background:rgba(0,0,0,.6);
+    display:none; align-items:center; justify-content:center; z-index:9999;
+  }
+  .modal.open{display:flex}
+  .modal-card{
+    background:#0b1220; border:1px solid #29405f; border-radius:14px; padding:10px;
+    max-width:92vw; max-height:92vh; display:grid; gap:8px;
+  }
+  .modal-card img{max-width:90vw; max-height:80vh; border-radius:10px}
+  .modal-head{display:flex; align-items:center; justify-content:space-between; gap:8px}
 </style>
 </head>
 <body>
@@ -71,26 +84,25 @@
 
   <header>
     <h1>🏋️ FitGamify – Entraînement</h1>
-    <button id="openStats" class="btn">📊 Statistiques</button>
+    <div class="row">
+      <a class="btn" href="index.html">🏠 Accueil</a>
+      <button id="openStats" class="btn">📊 Statistiques</button>
+      <button id="toggleCreator" class="btn primary">🧰 Créateur de programmes</button>
+    </div>
   </header>
   <p class="quote" id="quote">“L'entraînement ne ment jamais.”</p>
 
   <!-- Choix programme -->
   <div class="card">
     <h2>📋 Choisis ton programme</h2>
-    <select id="programme" onchange="updateProgram()">
-      <option value="">-- Sélectionner --</option>
-      <option value="Full Body">Full Body</option>
-      <option value="Street Workout">Street Workout</option>
-      <option value="Running">Running</option>
-    </select>
+    <select id="programme" onchange="updateProgram()"></select>
   </div>
 
   <!-- Séance -->
   <div class="card">
     <h2>📆 Séance du jour</h2>
     <div id="exercises"></div>
-    <div style="display:flex; gap:8px; margin-top:8px">
+    <div class="row" style="margin-top:8px">
       <button class="btn primary" onclick="saveSession()">💾 Enregistrer la séance</button>
     </div>
   </div>
@@ -101,12 +113,94 @@
     <div id="history">Aucune séance encore.</div>
   </div>
 
+  <!-- Créateur de programmes -->
+  <div id="creatorCard" class="card" style="display:none">
+    <h2>🧰 Créateur de programmes (local)</h2>
+    <div class="creator-grid">
+      <div class="creator-block">
+        <div class="mini">Nom du programme</div>
+        <input id="c_name" placeholder="ex: Full Body – Poush/Pull/Legs"/>
+        <div class="mini" style="margin-top:8px">Type par défaut des nouveaux exercices</div>
+        <select id="c_defaultType">
+          <option value="strength">Force / Muscu</option>
+          <option value="running">Running</option>
+        </select>
+
+        <div class="mini" style="margin-top:12px">Banque d’images (clic = copier l’URL ci-dessous)</div>
+        <div class="bank">
+          <button class="btn" onclick="setImageUrl('https://upload.wikimedia.org/wikipedia/commons/3/3a/Back_squat.png')">🏋️ Squat (schéma)</button>
+          <button class="btn" onclick="setImageUrl('https://upload.wikimedia.org/wikipedia/commons/f/f3/Deadlift_2.png')">🏋️ Deadlift (schéma)</button>
+          <button class="btn" onclick="setImageUrl('https://upload.wikimedia.org/wikipedia/commons/7/7e/Lat_pulldown.jpg')">🏋️ Tirage vertical</button>
+          <button class="btn" onclick="setImageUrl('https://upload.wikimedia.org/wikipedia/commons/2/2f/Dumbbell_shoulder_press.jpg')">🏋️ Développé épaules</button>
+        </div>
+      </div>
+
+      <div class="creator-block">
+        <div class="mini">Exercice à ajouter</div>
+        <input id="c_exo_name" placeholder="Nom de l’exercice (ex: Squat barre)"/>
+        <select id="c_exo_type" style="margin-top:6px">
+          <option value="strength">Force / Muscu</option>
+          <option value="running">Running</option>
+        </select>
+
+        <!-- Force -->
+        <div id="c_strength_block" style="margin-top:8px">
+          <div class="mini">Poids par série (3) – facultatif</div>
+          <div class="row" style="gap:6px">
+            <input id="c_p1" type="text" placeholder="S1 (kg ou texte)"/>
+            <input id="c_p2" type="text" placeholder="S2"/>
+            <input id="c_p3" type="text" placeholder="S3"/>
+          </div>
+        </div>
+
+        <!-- Running -->
+        <div id="c_running_block" style="margin-top:8px; display:none">
+          <div class="mini">Distance & Temps par défaut (facultatif)</div>
+          <div class="row" style="gap:6px">
+            <input id="c_d1" type="number" step="0.1" placeholder="km"/>
+            <input id="c_t1" type="number" step="1" placeholder="min"/>
+          </div>
+        </div>
+
+        <div class="mini" style="margin-top:8px">Image (URL)</div>
+        <input id="c_img" placeholder="https://... (ou coller un data:image/png;base64,...)"/>
+
+        <div class="row" style="margin-top:10px">
+          <button class="btn" onclick="addExerciseToBuffer()">➕ Ajouter l’exercice au lot</button>
+          <button class="btn danger" onclick="clearBuffer()">🧽 Vider le lot</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="creator-block" style="margin-top:10px">
+      <h3 style="margin:.2rem 0 6px">Exercices en attente d’ajout</h3>
+      <div id="bufferList" class="mini">Aucun pour le moment.</div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn good" onclick="saveProgram()">💾 Enregistrer/Écraser le programme</button>
+        <button class="btn" onclick="loadProgramInCreator()">📥 Charger un programme existant</button>
+      </div>
+      <div class="mini" style="margin-top:8px">Astuce : même nom = écraser/mettre à jour le programme.</div>
+    </div>
+  </div>
+
 </div>
 
-<div id="toast"></div>
+<!-- Modal d'image -->
+<div id="imgModal" class="modal" onclick="closeModal(event)">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div id="imgTitle" class="muted">Illustration</div>
+      <button class="btn danger" onclick="hideModal()">Fermer ✖</button>
+    </div>
+    <img id="imgView" src="" alt="illustration"/>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed; left:50%; transform:translateX(-50%); bottom:16px; background:rgba(0,0,0,.85); color:#fff; padding:.6rem .9rem; border-radius:10px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:9999"></div>
 
 <script>
-/* ---------------- Data ---------------- */
+/* ====== Données & constantes ====== */
 const quotes = [
   "“Ce qui te semble impossible aujourd’hui sera ton échauffement demain.”",
   "“Pousse-toi toi-même, personne ne le fera à ta place.”",
@@ -134,37 +228,70 @@ const quotes = [
   "“Tu n’es pas en concurrence avec les autres. Tu es en concurrence avec toi-même.”"
 ];
 
-const programmes = {
+const BASE_PROGRAMS = {
   "Full Body": [
-    { nom: "Squat machine press", poids: ["50", "80", "80"] },
-    { nom: "Split squat", poids: ["10", "10", "10"] },
-    { nom: "Squat chargé", poids: ["40", "40", "50"] },
-    { nom: "Deadlift", poids: ["40", "40", "40"] }
+    { nom: "Squat machine press", type:"strength", poids: ["50","80","80"], img:"" },
+    { nom: "Split squat", type:"strength", poids: ["10","10","10"], img:"" },
+    { nom: "Squat chargé", type:"strength", poids: ["40","40","50"], img:"" },
+    { nom: "Deadlift", type:"strength", poids: ["40","40","40"], img:"" }
   ],
   "Street Workout": [
-    { nom: "Traction", poids: ["PDC", "PDC", "PDC"] },
-    { nom: "Dips", poids: ["PDC", "PDC", "PDC"] }
+    { nom: "Traction", type:"strength", poids: ["PDC","PDC","PDC"], img:"" },
+    { nom: "Dips", type:"strength", poids: ["PDC","PDC","PDC"], img:"" }
   ],
   "Running": [
-    { nom: "Course (Distance)", type: "running", distance: ["5"], temps: ["30"] }
+    { nom: "Course (Distance)", type:"running", distance:["5"], temps:["30"], img:"" }
   ]
 };
 
-const lastValues = {}; // reprend dernières entrées
-const HISTORY_KEY = "fitHistory";
-const LAST_KEY = "fitLastInputs";
+// petite banque d’images par nom (utilisée si exo.img est vide)
+const IMAGE_BANK = {
+  "Squat machine press": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Back_squat.png",
+  "Deadlift": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Deadlift_2.png",
+  "Tirage vertical": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Lat_pulldown.jpg",
+  "Développé épaules haltères": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Dumbbell_shoulder_press.jpg",
+};
 
-/* ---------------- UI helpers ---------------- */
+const HISTORY_KEY = "fitHistory";
+const LAST_KEY    = "fitLastInputs";
+const PROGS_KEY   = "fitProgramsV1";
+
+let programmes = {};   // fusion base + user
+const lastValues = {}; // reprise dernières saisies
+
+/* ====== Utilitaires ====== */
 const $ = id => document.getElementById(id);
 function toast(msg){
-  const t=$('toast'); t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),1400);
+  const t=$('toast'); t.textContent=msg; t.style.opacity=1; setTimeout(()=>t.style.opacity=0,1200);
 }
 function displayQuote(){
   $('quote').textContent = quotes[Math.floor(Math.random()*quotes.length)];
 }
+function openStats(){ window.open('graph.html','_blank'); }
 
-/* ---------------- Render exercises ---------------- */
+/* ====== Programmes (merge) ====== */
+function loadUserPrograms(){
+  try{
+    return JSON.parse(localStorage.getItem(PROGS_KEY) || "{}");
+  }catch{ return {}; }
+}
+function saveUserPrograms(obj){
+  localStorage.setItem(PROGS_KEY, JSON.stringify(obj));
+}
+function computeProgrammes(){
+  const user = loadUserPrograms();
+  programmes = JSON.parse(JSON.stringify(BASE_PROGRAMS));
+  // merge/override
+  Object.keys(user).forEach(k => programmes[k] = user[k]);
+  // rafraîchir la liste
+  const sel = $('programme');
+  const current = sel.value;
+  sel.innerHTML = `<option value="">-- Sélectionner --</option>` +
+    Object.keys(programmes).map(p=>`<option value="${p}">${p}</option>`).join('');
+  if(programmes[current]) sel.value = current;
+}
+
+/* ====== Rendu séance ====== */
 function updateProgram(){
   const prog = $('programme').value;
   const zone = $('exercises'); zone.innerHTML = "";
@@ -172,42 +299,51 @@ function updateProgram(){
 
   programmes[prog].forEach((exo, exoIndex) => {
     let html = `<div class="exercise-entry" id="exo-${exoIndex}">
-      <b>${exo.nom}</b><br/>`;
+      <b>${exo.nom}</b>`;
+
+    // bouton illustration si image dispo (img ou banque)
+    const imgUrl = exo.img || IMAGE_BANK[exo.nom] || "";
+    if(imgUrl){
+      html += ` <button class="btn" style="margin-left:6px" onclick="showIllustration('${encodeURIComponent(imgUrl)}','${encodeURIComponent(exo.nom)}')">🖼️ Illustration</button>`;
+    }
+    html += `<br/>`;
 
     if (exo.type === "running") {
-      for (let i=0;i<exo.distance.length;i++){
+      const dList = exo.distance?.length ? exo.distance : [""];
+      const tList = exo.temps?.length ? exo.temps : [""];
+      for (let i=0;i<dList.length;i++){
         const keyD = `distance-${exoIndex}-${i}`;
         const keyT = `temps-${exoIndex}-${i}`;
         const distVal = lastValues[keyD] || "";
         const timeVal = lastValues[keyT] || "";
         html += `<div class="series-row">
-            Séance ${i+1} :
-            Distance (km) : <input type="number" id="${keyD}" placeholder="${exo.distance[i]}" value="${distVal}">
-            Temps (min) : <input type="number" id="${keyT}" placeholder="${exo.temps[i]}" value="${timeVal}">
+            Sortie ${i+1} :
+            Distance (km) : <input type="number" id="${keyD}" placeholder="${dList[i]||""}" value="${distVal}">
+            Temps (min) : <input type="number" id="${keyT}" placeholder="${tList[i]||""}" value="${timeVal}">
           </div>`;
       }
     } else {
-      for (let serie=0; serie<exo.poids.length; serie++){
-        const keyP = `poids-${exoIndex}-${serie}`;
-        const keyR = `rep-${exoIndex}-${serie}`;
+      const po = exo.poids?.length ? exo.poids : ["","",""];
+      for (let s=0; s<po.length; s++){
+        const keyP = `poids-${exoIndex}-${s}`;
+        const keyR = `rep-${exoIndex}-${s}`;
         const poidsVal = lastValues[keyP] || "";
         const repsVal  = lastValues[keyR] || "";
         html += `<div class="series-row">
-            Série ${serie+1} :
-            Poids : <input type="text" id="${keyP}" placeholder="${exo.poids[serie]}" value="${poidsVal}">
+            Série ${s+1} :
+            Poids : <input type="text" id="${keyP}" placeholder="${po[s]||""}" value="${poidsVal}">
             Reps : <input type="number" id="${keyR}" value="${repsVal}">
           </div>`;
       }
     }
 
-    html += `<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-        <button class="btn success" onclick="markDone(${exoIndex}, this)">✅ Fait</button>
-        <button class="btn" onclick="startTimer(this,30)">⏱️ Récup 30s</button>
-        <button class="btn" onclick="startTimer(this,60)">⏱️ Récup 1min</button>
+    html += `<div class="row" style="flex-wrap:wrap">
+        <button class="btn good" onclick="markDone(${exoIndex}, this)">✅ Fait</button>
+        <button class="btn" onclick="startTimer(this,30)">⏱️ 30s</button>
+        <button class="btn" onclick="startTimer(this,60)">⏱️ 1min</button>
         <span class="timer" id="timer-${exoIndex}"></span>
       </div>
     </div>`;
-
     zone.insertAdjacentHTML('beforeend', html);
   });
 }
@@ -216,8 +352,6 @@ function markDone(index, btn){
   btn.textContent = "✅ Terminé";
   btn.disabled = true;
 }
-
-/* ---------------- Timers ---------------- */
 function startTimer(btn, duration){
   const id = btn.parentElement.parentElement.id.split("-")[1];
   const span = $("timer-"+id);
@@ -230,7 +364,7 @@ function startTimer(btn, duration){
   },1000);
 }
 
-/* ---------------- Save / history ---------------- */
+/* ====== Sauvegarde / Historique ====== */
 function saveSession(){
   const prog = $('programme').value;
   if(!prog){ toast("Sélectionne un programme d’abord"); return; }
@@ -243,7 +377,8 @@ function saveSession(){
   exos.forEach((exo, exoIndex) => {
     data += `🔸 ${exo.nom} :\n`;
     if (exo.type === "running") {
-      for (let i=0;i<exo.distance.length;i++){
+      const dList = exo.distance?.length ? exo.distance : [""];
+      for (let i=0;i<dList.length;i++){
         const d = ($(`distance-${exoIndex}-${i}`)||{}).value || "n.c.";
         const t = ($(`temps-${exoIndex}-${i}`)||{}).value || "n.c.";
         data += `   ➤ Séance ${i+1} – ${d} km en ${t} min\n`;
@@ -251,7 +386,8 @@ function saveSession(){
         inputsToStore[`temps-${exoIndex}-${i}`]=t;
       }
     } else {
-      for (let s=0;s<exo.poids.length;s++){
+      const len = (exo.poids?.length) || 3;
+      for (let s=0;s<len;s++){
         const p = ($(`poids-${exoIndex}-${s}`)||{}).value || "n.c.";
         const r = ($(`rep-${exoIndex}-${s}`)||{}).value || "n.c.";
         data += `   ➤ Série ${s+1} – ${r} reps @ ${p}kg\n`;
@@ -267,7 +403,6 @@ function saveSession(){
   toast("💾 Séance enregistrée !");
   displayHistory();
 }
-
 function displayHistory(){
   const h = (localStorage.getItem(HISTORY_KEY) || "").trim();
   const box = $('history'); box.innerHTML = "";
@@ -286,7 +421,6 @@ function displayHistory(){
     box.appendChild(div);
   });
 }
-
 function deleteSession(index, summaryEnc){
   const summary = decodeURIComponent(summaryEnc);
   if(!confirm(`Supprimer définitivement ?\n\n${summary}`)){ toast("Suppression annulée"); return; }
@@ -297,7 +431,6 @@ function deleteSession(index, summaryEnc){
   displayHistory();
   toast("Séance supprimée 🗑️");
 }
-
 function loadLastSession(){
   try{
     const raw = localStorage.getItem(LAST_KEY);
@@ -306,10 +439,97 @@ function loadLastSession(){
   }catch(e){ console.warn("Erreur lecture ancienne séance", e); }
 }
 
-/* ---------------- Init ---------------- */
-$('openStats').addEventListener('click', ()=> window.open('graph.html','_blank'));
+/* ====== Modal images ====== */
+function showIllustration(urlEnc, nameEnc){
+  const url = decodeURIComponent(urlEnc);
+  const name = decodeURIComponent(nameEnc);
+  $('imgView').src = url;
+  $('imgTitle').textContent = name;
+  $('imgModal').classList.add('open');
+}
+function hideModal(){ $('imgModal').classList.remove('open'); $('imgView').src=""; }
+function closeModal(e){ if(e.target.id==='imgModal') hideModal(); }
+
+/* ====== Créateur de programmes ====== */
+let buffer = []; // exercices en attente d’ajout
+
+function setImageUrl(url){ $('c_img').value = url; toast("URL image copiée dans le champ"); }
+
+$('toggleCreator').addEventListener('click', ()=>{
+  const c = $('creatorCard');
+  c.style.display = (c.style.display==='none' || !c.style.display) ? 'block' : 'none';
+});
+
+$('c_exo_type').addEventListener('change', ()=>{
+  const t = $('c_exo_type').value;
+  $('c_strength_block').style.display = (t==='strength') ? 'block' : 'none';
+  $('c_running_block').style.display = (t==='running') ? 'block' : 'none';
+});
+
+function addExerciseToBuffer(){
+  const name = $('c_exo_name').value.trim();
+  const type = $('c_exo_type').value;
+  const img  = $('c_img').value.trim();
+
+  if(!name){ toast("Nom de l’exercice manquant"); return; }
+
+  if(type==='strength'){
+    const p1 = $('c_p1').value.trim();
+    const p2 = $('c_p2').value.trim();
+    const p3 = $('c_p3').value.trim();
+    buffer.push({ nom:name, type:'strength', poids:[p1,p2,p3], img });
+  }else{
+    const d1 = $('c_d1').value.trim();
+    const t1 = $('c_t1').value.trim();
+    buffer.push({ nom:name, type:'running', distance:[d1||""], temps:[t1||""], img });
+  }
+
+  $('c_exo_name').value = ''; $('c_img').value='';
+  $('c_p1').value=''; $('c_p2').value=''; $('c_p3').value='';
+  $('c_d1').value=''; $('c_t1').value='';
+  renderBuffer();
+}
+function clearBuffer(){ buffer=[]; renderBuffer(); }
+function renderBuffer(){
+  const box = $('bufferList');
+  if(!buffer.length){ box.textContent = "Aucun pour le moment."; return; }
+  box.innerHTML = buffer.map((e,i)=>`<div>• ${e.nom} <span class="muted">(${e.type})</span>${e.img?` – <span class="muted">img ok</span>`:''}</div>`).join('');
+}
+
+function saveProgram(){
+  const name = $('c_name').value.trim();
+  if(!name){ toast("Nom du programme manquant"); return; }
+  if(!buffer.length){ toast("Ajoute au moins un exercice"); return; }
+  const user = loadUserPrograms();
+  user[name] = JSON.parse(JSON.stringify(buffer)); // clone
+  saveUserPrograms(user);
+  buffer=[]; renderBuffer();
+  computeProgrammes(); // refresh list
+  $('programme').value = name;
+  updateProgram();
+  toast("Programme enregistré !");
+}
+
+function loadProgramInCreator(){
+  const user = loadUserPrograms();
+  const keys = Object.keys(user);
+  if(!keys.length){ toast("Aucun programme utilisateur trouvé"); return; }
+  const name = prompt("Nom exact du programme à charger :", keys[0]);
+  if(!name || !user[name]){ toast("Introuvable"); return; }
+  $('c_name').value = name;
+  buffer = JSON.parse(JSON.stringify(user[name]));
+  renderBuffer();
+  toast("Programme chargé en zone d’édition");
+}
+
+/* ====== Init ====== */
+$('openStats').addEventListener('click', openStats);
 displayQuote();
+computeProgrammes();
 loadLastSession();
+// set default selection (premier)
+const firstProg = Object.keys(programmes)[0] || "";
+if(firstProg) $('programme').value = firstProg;
 updateProgram();
 displayHistory();
 </script>
