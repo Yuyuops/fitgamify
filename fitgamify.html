@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FitGamify – Entraînement + Créateur</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FitGamify – Builder + Séance (GitHub Import)</title>
 <style>
   :root{
     --bg1:#0f1623; --bg2:#1b2433; --card:#121a28; --border:#273349;
@@ -24,7 +24,7 @@
     background:linear-gradient(90deg,var(--glow1),var(--glow2));
     -webkit-background-clip:text; -webkit-text-fill-color:transparent;
   }
-  .quote{color:var(--muted); font-style:italic; margin:.2rem 0 1rem}
+  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
   .btn{
     background:var(--btn2); color:#e8efff; border:1px solid #3a4a67;
     padding:.55rem .8rem; border-radius:10px; cursor:pointer; font-weight:600; text-decoration:none;
@@ -39,10 +39,14 @@
     box-shadow:0 10px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03);
   }
   h2{margin:.2rem 0 1rem; font-size:1.1rem}
+  h3{margin:.2rem 0 .6rem; font-size:1rem; color:#cfe3ff}
+  .muted{color:var(--muted)}
   select, input[type="number"], input[type="text"], textarea{
     background:#0f1725; color:var(--txt); border:1px solid #334155;
     padding:10px 12px; border-radius:10px; outline:none; width:100%;
   }
+  .two{display:grid; gap:10px}
+  @media(min-width:850px){ .two{grid-template-columns:1.2fr .8fr} }
   .exercise-entry{
     background:#0f1725; border:1px solid #243149; border-radius:12px;
     padding:10px; margin:8px 0;
@@ -54,138 +58,178 @@
   .hist-item{display:flex; gap:10px; align-items:flex-start; background:#0f1725; border:1px solid #243149; border-radius:10px; padding:10px}
   .hist-item pre{margin:0; white-space:pre-wrap; color:#cfe3ff}
   .right{margin-left:auto; display:flex; gap:8px}
-  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-  .muted{color:var(--muted)}
-
-  /* Créateur */
-  .creator-grid{display:grid; gap:10px}
-  @media(min-width:780px){ .creator-grid{grid-template-columns:1fr 1fr} }
-  .creator-block{background:#0f1725; border:1px solid #243149; border-radius:12px; padding:12px}
-  .mini{font-size:.9rem; color:var(--muted)}
-  .bank{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
-  .bank > button{font-size:.85rem}
-
+  .quote{color:var(--muted); font-style:italic; margin:.2rem 0 1rem}
+  .pill{display:inline-flex; gap:8px; align-items:center; padding:6px 10px; background:#0f1725; border:1px solid #243149; border-radius:999px}
+  .tag{background:#13203a; border:1px solid #243149; padding:2px 6px; border-radius:999px; font-size:.85rem; color:#cfe3ff}
+  .list{display:grid; gap:8px; max-height:280px; overflow:auto}
+  .list-item{display:flex; align-items:center; gap:8px; background:#0f1725; border:1px solid #243149; border-radius:10px; padding:8px}
+  .list-item .name{flex:1}
+  .ghost{opacity:.6}
   /* Modal image */
-  .modal{
-    position:fixed; inset:0; background:rgba(0,0,0,.6);
-    display:none; align-items:center; justify-content:center; z-index:9999;
-  }
+  .modal{position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:9999}
   .modal.open{display:flex}
-  .modal-card{
-    background:#0b1220; border:1px solid #29405f; border-radius:14px; padding:10px;
-    max-width:92vw; max-height:92vh; display:grid; gap:8px;
-  }
+  .modal-card{background:#0b1220; border:1px solid #29405f; border-radius:14px; padding:10px; max-width:92vw; max-height:92vh; display:grid; gap:8px}
   .modal-card img{max-width:90vw; max-height:80vh; border-radius:10px}
   .modal-head{display:flex; align-items:center; justify-content:space-between; gap:8px}
+  /* Toast */
+  #toast{position:fixed; left:50%; transform:translateX(-50%); bottom:16px; background:rgba(0,0,0,.85); color:#fff; padding:.6rem .9rem; border-radius:10px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:9999}
+  #toast.show{opacity:1}
+  details summary{cursor:pointer; user-select:none; color:#cfe3ff}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <h1>🏋️ FitGamify – Entraînement</h1>
+    <h1>🏋️ FitGamify – Builder & Séance</h1>
     <div class="row">
       <a class="btn" href="index.html">🏠 Accueil</a>
       <button id="openStats" class="btn">📊 Statistiques</button>
-      <button id="toggleCreator" class="btn primary">🧰 Créateur de programmes</button>
     </div>
   </header>
-  <p class="quote" id="quote">“L'entraînement ne ment jamais.”</p>
+  <p class="quote" id="quote">“L’entraînement ne ment jamais.”</p>
 
-  <!-- Choix programme -->
+  <!-- BUILDER -->
   <div class="card">
-    <h2>📋 Choisis ton programme</h2>
-    <select id="programme" onchange="updateProgram()"></select>
+    <h2>🧰 Créer / Modifier un programme</h2>
+    <div class="two">
+      <!-- Colonne gauche: définition programme -->
+      <div>
+        <div class="row" style="gap:8px">
+          <div style="flex:2">
+            <div class="muted">Nom du programme</div>
+            <input id="progName" placeholder="ex: Full Body Force"/>
+          </div>
+          <div style="flex:1">
+            <div class="muted">Mode</div>
+            <select id="progMode">
+              <option value="series">Séries (finir les séries exo par exo)</option>
+              <option value="circuit">Circuit / Set (enchaîner tous les exos, X tours)</option>
+            </select>
+          </div>
+          <div style="flex:1" id="seriesCountWrap">
+            <div class="muted">Séries/exo</div>
+            <input id="seriesCount" type="number" min="1" max="10" value="3"/>
+          </div>
+          <div style="flex:1; display:none" id="roundsWrap">
+            <div class="muted">Tours (circuit)</div>
+            <input id="rounds" type="number" min="1" max="20" value="3"/>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="muted">Exercices du programme (ordre = ordre d’exécution)</div>
+          <div id="programList" class="list"></div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn good" id="saveProgramBtn">💾 Enregistrer / Écraser</button>
+            <button class="btn" id="loadProgramBtn">📥 Charger</button>
+            <button class="btn danger" id="clearProgramBtn">🧽 Vider</button>
+          </div>
+        </div>
+
+        <!-- IMPORT GITHUB -->
+        <details style="margin-top:14px">
+          <summary>📥 Importer les exercices depuis ton dossier <code>images/</code> (GitHub)</summary>
+          <div class="exercise-entry" style="margin-top:8px">
+            <div class="row">
+              <input id="ghOwner" placeholder="owner (ex: tonPseudo)" style="flex:1"/>
+              <input id="ghRepo"  placeholder="repo (ex: tonRepoPages)" style="flex:1"/>
+            </div>
+            <div class="row">
+              <input id="ghBranch" value="main" placeholder="branche (main/gh-pages)" style="flex:1"/>
+              <input id="ghPath"   value="images" placeholder="chemin (images)" style="flex:1"/>
+            </div>
+            <div class="row">
+              <select id="ghDefaultType" style="flex:1">
+                <option value="strength">Type par défaut: Force/Muscu</option>
+                <option value="running">Type par défaut: Running</option>
+              </select>
+              <input id="ghNameTransform" placeholder="Remplacements nom (ex: _: , -: )" style="flex:2"/>
+            </div>
+            <div class="row">
+              <button class="btn" id="ghScanBtn">🔎 Scanner & synchroniser</button>
+              <span class="muted">Ajoute/Met à jour automatiquement les exercices (image = <code>path/nomFichier</code>).</span>
+            </div>
+            <div id="ghResult" class="muted" style="margin-top:6px"></div>
+          </div>
+        </details>
+      </div>
+
+      <!-- Colonne droite: catalogue exercice -->
+      <div>
+        <h3>📚 Catalogue d’exercices</h3>
+        <div class="row">
+          <input id="exoName" placeholder="Nom ex: Squat, Traction…"/>
+        </div>
+        <div class="row">
+          <select id="exoType" style="flex:1">
+            <option value="strength">Force/Muscu</option>
+            <option value="running">Running</option>
+          </select>
+          <input id="exoImg" placeholder="URL image (optionnel)" style="flex:2"/>
+        </div>
+
+        <!-- Aperçu image -->
+        <div id="imgPreviewWrap" class="muted" style="margin-top:6px; display:none;">
+          <span>Aperçu :</span>
+          <div style="margin-top:6px;">
+            <img id="imgPreview" alt="aperçu exercice" style="max-width:180px; max-height:120px; border-radius:8px; border:1px solid #243149;">
+          </div>
+        </div>
+
+        <div class="row" id="exoDefaultsStrength" style="margin-top:6px">
+          <input id="exoHint" placeholder="Indices ex: 50/80/80 (kg)"/>
+        </div>
+        <div class="row" id="exoDefaultsRun" style="display:none; margin-top:6px">
+          <input id="exoDist" type="number" step="0.1" placeholder="km par défaut"/>
+          <input id="exoTime" type="number" step="1" placeholder="min par défaut"/>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="addExoToCatalog">➕ Ajouter au catalogue</button>
+        </div>
+
+        <div class="muted" style="margin-top:8px">Catalogue (clic ➕ pour l’ajouter au programme)</div>
+        <div id="catalogList" class="list"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- Séance -->
+  <!-- SÉANCE -->
   <div class="card">
-    <h2>📆 Séance du jour</h2>
+    <h2>🎯 Lancer une séance</h2>
+    <div class="row">
+      <select id="selectProgram"></select>
+      <button class="btn primary" id="startSessionBtn">▶ Démarrer</button>
+    </div>
+  </div>
+
+  <div class="card" id="sessionCard" style="display:none">
+    <h2>📆 Séance en cours</h2>
     <div id="exercises"></div>
+
+    <div class="exercise-entry" style="margin-top:10px">
+      <b>➕ Exercice libre (optionnel)</b>
+      <div id="freeList" class="list"></div>
+      <div class="row" style="margin-top:6px">
+        <button class="btn" onclick="addFreeLine()">Ajouter une ligne</button>
+        <button class="btn danger" onclick="clearFree()">Effacer libres</button>
+      </div>
+    </div>
+
     <div class="row" style="margin-top:8px">
       <button class="btn primary" onclick="saveSession()">💾 Enregistrer la séance</button>
     </div>
   </div>
 
-  <!-- Historique -->
+  <!-- HISTORIQUE -->
   <div class="card">
     <h2>📂 Historique local</h2>
     <div id="history">Aucune séance encore.</div>
   </div>
 
-  <!-- Créateur de programmes -->
-  <div id="creatorCard" class="card" style="display:none">
-    <h2>🧰 Créateur de programmes (local)</h2>
-    <div class="creator-grid">
-      <div class="creator-block">
-        <div class="mini">Nom du programme</div>
-        <input id="c_name" placeholder="ex: Full Body – Poush/Pull/Legs"/>
-        <div class="mini" style="margin-top:8px">Type par défaut des nouveaux exercices</div>
-        <select id="c_defaultType">
-          <option value="strength">Force / Muscu</option>
-          <option value="running">Running</option>
-        </select>
-
-        <div class="mini" style="margin-top:12px">Banque d’images (clic = copier l’URL ci-dessous)</div>
-        <div class="bank">
-          <button class="btn" onclick="setImageUrl('https://upload.wikimedia.org/wikipedia/commons/3/3a/Back_squat.png')">🏋️ Squat (schéma)</button>
-          <button class="btn" onclick="setImageUrl('https://upload.wikimedia.org/wikipedia/commons/f/f3/Deadlift_2.png')">🏋️ Deadlift (schéma)</button>
-          <button class="btn" onclick="setImageUrl('https://upload.wikimedia.org/wikipedia/commons/7/7e/Lat_pulldown.jpg')">🏋️ Tirage vertical</button>
-          <button class="btn" onclick="setImageUrl('https://upload.wikimedia.org/wikipedia/commons/2/2f/Dumbbell_shoulder_press.jpg')">🏋️ Développé épaules</button>
-        </div>
-      </div>
-
-      <div class="creator-block">
-        <div class="mini">Exercice à ajouter</div>
-        <input id="c_exo_name" placeholder="Nom de l’exercice (ex: Squat barre)"/>
-        <select id="c_exo_type" style="margin-top:6px">
-          <option value="strength">Force / Muscu</option>
-          <option value="running">Running</option>
-        </select>
-
-        <!-- Force -->
-        <div id="c_strength_block" style="margin-top:8px">
-          <div class="mini">Poids par série (3) – facultatif</div>
-          <div class="row" style="gap:6px">
-            <input id="c_p1" type="text" placeholder="S1 (kg ou texte)"/>
-            <input id="c_p2" type="text" placeholder="S2"/>
-            <input id="c_p3" type="text" placeholder="S3"/>
-          </div>
-        </div>
-
-        <!-- Running -->
-        <div id="c_running_block" style="margin-top:8px; display:none">
-          <div class="mini">Distance & Temps par défaut (facultatif)</div>
-          <div class="row" style="gap:6px">
-            <input id="c_d1" type="number" step="0.1" placeholder="km"/>
-            <input id="c_t1" type="number" step="1" placeholder="min"/>
-          </div>
-        </div>
-
-        <div class="mini" style="margin-top:8px">Image (URL)</div>
-        <input id="c_img" placeholder="https://... (ou coller un data:image/png;base64,...)"/>
-
-        <div class="row" style="margin-top:10px">
-          <button class="btn" onclick="addExerciseToBuffer()">➕ Ajouter l’exercice au lot</button>
-          <button class="btn danger" onclick="clearBuffer()">🧽 Vider le lot</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="creator-block" style="margin-top:10px">
-      <h3 style="margin:.2rem 0 6px">Exercices en attente d’ajout</h3>
-      <div id="bufferList" class="mini">Aucun pour le moment.</div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn good" onclick="saveProgram()">💾 Enregistrer/Écraser le programme</button>
-        <button class="btn" onclick="loadProgramInCreator()">📥 Charger un programme existant</button>
-      </div>
-      <div class="mini" style="margin-top:8px">Astuce : même nom = écraser/mettre à jour le programme.</div>
-    </div>
-  </div>
-
 </div>
 
-<!-- Modal d'image -->
+<!-- Modal image -->
 <div id="imgModal" class="modal" onclick="closeModal(event)">
   <div class="modal-card">
     <div class="modal-head">
@@ -196,11 +240,15 @@
   </div>
 </div>
 
-<!-- Toast -->
-<div id="toast" style="position:fixed; left:50%; transform:translateX(-50%); bottom:16px; background:rgba(0,0,0,.85); color:#fff; padding:.6rem .9rem; border-radius:10px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:9999"></div>
+<div id="toast"></div>
 
 <script>
-/* ====== Données & constantes ====== */
+/* ====== Constantes & clés ====== */
+const HISTORY_KEY = "fitHistory";
+const PROGS_KEY   = "fitProgramsV3";
+const CATALOG_KEY = "fitCatalogV1";
+const LAST_KEY    = "fitLastInputs";
+
 const quotes = [
   "“Ce qui te semble impossible aujourd’hui sera ton échauffement demain.”",
   "“Pousse-toi toi-même, personne ne le fera à ta place.”",
@@ -211,205 +259,455 @@ const quotes = [
   "“Les excuses ne brûlent pas de calories.”",
   "“Un combat se gagne d’abord dans la tête, ensuite sur le ring.”",
   "“Un jour ou jour un : à toi de choisir.”",
-  "“La douleur est temporaire, l’abandon est éternel.”",
-  "“On ne devient pas fort en restant dans sa zone de confort.”",
-  "“Ta plus grande arme, c’est ta constance.”",
-  "“Chaque coup que tu encaisses te forge.”",
-  "“Si tu veux être un guerrier, agis comme tel, même fatigué.”",
-  "“Le mental frappe plus fort que les poings.”",
-  "“L’échec n’est pas l’opposé du succès, c’est une étape.”",
-  "“Celui qui transpire à l’entraînement saigne moins au combat.”",
-  "“N’attends pas d’être motivé, sois discipliné.”",
-  "“Tu t’entraînes quand tu en as envie, eux s’entraînent même quand ils n’en ont pas.”",
-  "“Ton seul vrai adversaire, c’est celui dans le miroir.”",
-  "“Frappe avec conviction, bouge avec intention.”",
-  "“Les maîtres ont échoué plus de fois que les débutants n’ont essayé.”",
-  "“Plus tu transpires à l'entraînement, moins tu pleures en compétition.”",
-  "“Tu n’es pas en concurrence avec les autres. Tu es en concurrence avec toi-même.”"
+  "“La douleur est temporaire, l’abandon est éternel.”"
 ];
 
-const BASE_PROGRAMS = {
-  "Full Body": [
-    { nom: "Squat machine press", type:"strength", poids: ["50","80","80"], img:"" },
-    { nom: "Split squat", type:"strength", poids: ["10","10","10"], img:"" },
-    { nom: "Squat chargé", type:"strength", poids: ["40","40","50"], img:"" },
-    { nom: "Deadlift", type:"strength", poids: ["40","40","40"], img:"" }
-  ],
-  "Street Workout": [
-    { nom: "Traction", type:"strength", poids: ["PDC","PDC","PDC"], img:"" },
-    { nom: "Dips", type:"strength", poids: ["PDC","PDC","PDC"], img:"" }
-  ],
-  "Running": [
-    { nom: "Course (Distance)", type:"running", distance:["5"], temps:["30"], img:"" }
-  ]
-};
+/* ====== État ====== */
+let programs = load(PROGS_KEY) || {};
+let catalog  = load(CATALOG_KEY) || seedCatalog();
+let lastVals = load(LAST_KEY) || {};
+let freeLines = []; // exercices libres pendant séance
 
-// petite banque d’images par nom (utilisée si exo.img est vide)
-const IMAGE_BANK = {
-  "Squat machine press": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Back_squat.png",
-  "Deadlift": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Deadlift_2.png",
-  "Tirage vertical": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Lat_pulldown.jpg",
-  "Développé épaules haltères": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Dumbbell_shoulder_press.jpg",
-};
-
-const HISTORY_KEY = "fitHistory";
-const LAST_KEY    = "fitLastInputs";
-const PROGS_KEY   = "fitProgramsV1";
-
-let programmes = {};   // fusion base + user
-const lastValues = {}; // reprise dernières saisies
-
-/* ====== Utilitaires ====== */
+/* ====== Helpers ====== */
 const $ = id => document.getElementById(id);
-function toast(msg){
-  const t=$('toast'); t.textContent=msg; t.style.opacity=1; setTimeout(()=>t.style.opacity=0,1200);
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1200); }
+function load(k){ try{ return JSON.parse(localStorage.getItem(k)||""); }catch{ return null; } }
+function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+function titleFromFilename(fn){
+  // enlève extension
+  const base = fn.replace(/\.[a-z0-9]+$/i, "");
+  // remplacements optionnels fournis (ex: "_: , -: ")
+  const mapTxt = $('ghNameTransform')?.value || "";
+  let name = base;
+  mapTxt.split(",").forEach(pair=>{
+    const [from,to] = pair.split(":").map(s=> (s||"").trim());
+    if(from){ name = name.split(from).join(to||" "); }
+  });
+  // fallback: tirets/underscores -> espace, capitalisation mots
+  name = name.replace(/[-_]+/g," ").trim();
+  name = name.split(" ").map(w=> w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
+  return name;
 }
+
+/* ====== Seed catalogue minimal ====== */
+function seedCatalog(){
+  return [
+    { name:"Squat machine press", type:"strength", img:"images/squat.png", hint:"50/80/80" },
+    { name:"Deadlift", type:"strength", img:"images/deadlift.jpg", hint:"40/40/40" },
+    { name:"Traction", type:"strength", img:"", hint:"PDC/PDC/PDC" },
+    { name:"Course (Distance)", type:"running", img:"", dist:5, time:30 },
+  ];
+}
+
+/* ====== UI init ====== */
 function displayQuote(){
   $('quote').textContent = quotes[Math.floor(Math.random()*quotes.length)];
 }
-function openStats(){ window.open('graph.html','_blank'); }
+function refreshProgramSelects(){
+  const sel = $('selectProgram');
+  const keys = Object.keys(programs);
+  sel.innerHTML = keys.length ? keys.map(k=>`<option value="${k}">${k}</option>`).join('') : '<option value="">(Aucun programme)</option>';
+}
+function renderCatalog(){
+  const box = $('catalogList'); box.innerHTML = "";
+  if(!catalog.length){ box.innerHTML = `<div class="muted">Catalogue vide</div>`; return; }
+  catalog.forEach((c,i)=>{
+    const div = document.createElement('div');
+    div.className="list-item";
+    div.innerHTML = `
+      <div class="name"><b>${c.name}</b> <span class="tag">${c.type}</span> ${c.img?'<span class="tag">🖼️</span>':''} ${c.hint?`<span class="tag">${c.hint}</span>`:''} ${c.dist?`<span class="tag">${c.dist}km</span>`:''}
+      </div>
+      <button class="btn" onclick="addCatalogToProgram(${i})">➕</button>`;
+    box.appendChild(div);
+  });
+}
+function renderProgramList(){
+  const name = $('progName').value.trim();
+  const p = programs[name] || tempProgram;
+  const cont = $('programList'); cont.innerHTML="";
+  if(!p || !p.exercises || !p.exercises.length){
+    cont.innerHTML = `<div class="muted">Aucun exercice encore. Utilise le catalogue ➕ ou l’import GitHub.</div>`;
+    return;
+  }
+  p.exercises.forEach((ex,idx)=>{
+    const row = document.createElement('div');
+    row.className="list-item";
+    row.innerHTML = `
+      <div class="name"><b>${ex.name}</b> <span class="tag">${ex.type}</span> ${ex.img?'<span class="tag">🖼️</span>':''}</div>
+      <div class="row">
+        <button class="btn" onclick="moveEx(${idx}, -1)">⬆️</button>
+        <button class="btn" onclick="moveEx(${idx}, 1)">⬇️</button>
+        <button class="btn danger" onclick="removeEx(${idx})">🗑️</button>
+      </div>`;
+    cont.appendChild(row);
+  });
+}
 
-/* ====== Programmes (merge) ====== */
-function loadUserPrograms(){
+/* ====== Programme temporaire (avant sauvegarde) ====== */
+let tempProgram = { name:"", mode:"series", seriesPerEx:3, rounds:3, exercises:[] };
+
+function syncBuilderHeaderToTemp(){
+  tempProgram.name = $('progName').value.trim();
+  tempProgram.mode = $('progMode').value;
+  tempProgram.seriesPerEx = parseInt($('seriesCount').value||"3",10);
+  tempProgram.rounds = parseInt($('rounds').value||"3",10);
+}
+
+/* ====== Builder Events ====== */
+$('progMode').addEventListener('change', ()=>{
+  const mode = $('progMode').value;
+  $('seriesCountWrap').style.display = (mode==='series') ? 'block' : 'none';
+  $('roundsWrap').style.display = (mode==='circuit') ? 'block' : 'none';
+  syncBuilderHeaderToTemp();
+});
+$('seriesCount').addEventListener('input', syncBuilderHeaderToTemp);
+$('rounds').addEventListener('input', syncBuilderHeaderToTemp);
+$('progName').addEventListener('input', ()=>{ syncBuilderHeaderToTemp(); renderProgramList(); });
+
+$('exoType').addEventListener('change', ()=>{
+  const t = $('exoType').value;
+  $('exoDefaultsStrength').style.display = (t==='strength')?'flex':'none';
+  $('exoDefaultsRun').style.display = (t==='running')?'flex':'none';
+});
+
+// Aperçu image live
+$('exoImg').addEventListener('input', ()=>{
+  const url = $('exoImg').value.trim();
+  const wrap = $('imgPreviewWrap');
+  const img  = $('imgPreview');
+  if(!url){ wrap.style.display = 'none'; img.src = ''; return; }
+  img.onload = ()=> { wrap.style.display = 'block'; };
+  img.onerror = ()=> { wrap.style.display = 'none'; img.src=''; };
+  img.src = url;
+});
+
+$('addExoToCatalog').addEventListener('click', ()=>{
+  const name = $('exoName').value.trim();
+  const type = $('exoType').value;
+  const img  = $('exoImg').value.trim();
+  if(!name){ toast("Nom d’exercice requis"); return; }
+  if(type==='strength'){
+    catalog.push({ name, type, img, hint: $('exoHint').value.trim() });
+  }else{
+    const dist = parseFloat($('exoDist').value||"");
+    const time = parseFloat($('exoTime').value||"");
+    catalog.push({ name, type, img, dist:isNaN(dist)?undefined:dist, time:isNaN(time)?undefined:time });
+  }
+  save(CATALOG_KEY, catalog);
+  $('exoName').value=''; $('exoImg').value=''; $('exoHint').value='';
+  $('exoDist').value=''; $('exoTime').value='';
+  $('imgPreviewWrap').style.display='none'; $('imgPreview').src='';
+  renderCatalog(); toast("Exercice ajouté au catalogue");
+});
+
+function addCatalogToProgram(i){
+  const c = catalog[i];
+  syncBuilderHeaderToTemp();
+  if(!tempProgram.name){ toast("Donne un nom au programme d’abord"); return; }
+  tempProgram.exercises.push({...c});
+  renderProgramList();
+}
+
+function moveEx(idx, dir){
+  const p = programs[tempProgram.name] || tempProgram;
+  const arr = p.exercises;
+  const j = idx+dir;
+  if(j<0 || j>=arr.length) return;
+  [arr[idx], arr[j]] = [arr[j], arr[idx]];
+  renderProgramList();
+}
+function removeEx(idx){
+  const p = programs[tempProgram.name] || tempProgram;
+  p.exercises.splice(idx,1);
+  renderProgramList();
+}
+
+$('saveProgramBtn').addEventListener('click', ()=>{
+  syncBuilderHeaderToTemp();
+  if(!tempProgram.name){ toast("Nom du programme manquant"); return; }
+  if(!tempProgram.exercises.length){ toast("Ajoute au moins un exercice"); return; }
+  programs[tempProgram.name] = JSON.parse(JSON.stringify(tempProgram));
+  save(PROGS_KEY, programs);
+  refreshProgramSelects();
+  toast("Programme enregistré / mis à jour");
+});
+
+$('loadProgramBtn').addEventListener('click', ()=>{
+  const names = Object.keys(programs);
+  if(!names.length){ toast("Aucun programme sauvegardé"); return; }
+  const ask = prompt("Nom exact du programme à charger :", names[0]);
+  if(!ask || !programs[ask]){ toast("Introuvable"); return; }
+  tempProgram = JSON.parse(JSON.stringify(programs[ask]));
+  $('progName').value = tempProgram.name;
+  $('progMode').value = tempProgram.mode;
+  $('seriesCount').value = tempProgram.seriesPerEx;
+  $('rounds').value = tempProgram.rounds;
+  $('seriesCountWrap').style.display = (tempProgram.mode==='series')?'block':'none';
+  $('roundsWrap').style.display = (tempProgram.mode==='circuit')?'block':'none';
+  renderProgramList();
+  toast("Programme chargé dans l’éditeur");
+});
+
+$('clearProgramBtn').addEventListener('click', ()=>{
+  tempProgram = { name:$('progName').value.trim()||"", mode:$('progMode').value, seriesPerEx:3, rounds:3, exercises:[] };
+  renderProgramList();
+});
+
+/* ====== Import GitHub ====== */
+$('ghScanBtn').addEventListener('click', syncFromGitHub);
+
+async function syncFromGitHub(){
+  const owner  = $('ghOwner').value.trim();
+  const repo   = $('ghRepo').value.trim();
+  const branch = $('ghBranch').value.trim() || 'main';
+  const path   = $('ghPath').value.trim() || 'images';
+  const defType= $('ghDefaultType').value;
+
+  if(!owner || !repo){ toast("Owner et repo requis"); return; }
+
+  const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`;
+
+  $('ghResult').textContent = "⏳ Scan en cours…";
   try{
-    return JSON.parse(localStorage.getItem(PROGS_KEY) || "{}");
-  }catch{ return {}; }
+    const res = await fetch(url, {headers:{'Accept':'application/vnd.github+json'}});
+    if(!res.ok){ throw new Error(`HTTP ${res.status}`); }
+    const list = await res.json();
+    const imgs = list.filter(x=> x.type==='file' && /\.(png|jpe?g|webp|gif|svg)$/i.test(x.name));
+
+    let created=0, updated=0;
+    imgs.forEach(file=>{
+      const imgPath = `${path}/${file.name}`;
+      const guessedName = titleFromFilename(file.name);
+      const existingIdx = catalog.findIndex(c=> c.name.toLowerCase() === guessedName.toLowerCase());
+
+      if(existingIdx>=0){
+        // Met à jour l'image si vide ou différent
+        if(!catalog[existingIdx].img || catalog[existingIdx].img !== imgPath){
+          catalog[existingIdx].img = imgPath;
+          updated++;
+        }
+      }else{
+        // Crée un nouvel exercice
+        if(defType==='running'){
+          catalog.push({ name: guessedName, type:'running', img: imgPath, dist:5, time:30 });
+        }else{
+          catalog.push({ name: guessedName, type:'strength', img: imgPath, hint:"" });
+        }
+        created++;
+      }
+    });
+
+    save(CATALOG_KEY, catalog);
+    renderCatalog();
+    $('ghResult').textContent = `✅ Terminé : ${created} créé(s), ${updated} mis à jour — dans “${path}/” sur ${branch}`;
+    toast("Catalogue synchronisé !");
+  }catch(e){
+    console.error(e);
+    $('ghResult').textContent = `❌ Erreur: ${e.message}. Vérifie owner/repo/branche/chemin et que le repo est public.`;
+    toast("Échec import GitHub");
+  }
 }
-function saveUserPrograms(obj){
-  localStorage.setItem(PROGS_KEY, JSON.stringify(obj));
-}
-function computeProgrammes(){
-  const user = loadUserPrograms();
-  programmes = JSON.parse(JSON.stringify(BASE_PROGRAMS));
-  // merge/override
-  Object.keys(user).forEach(k => programmes[k] = user[k]);
-  // rafraîchir la liste
-  const sel = $('programme');
-  const current = sel.value;
-  sel.innerHTML = `<option value="">-- Sélectionner --</option>` +
-    Object.keys(programmes).map(p=>`<option value="${p}">${p}</option>`).join('');
-  if(programmes[current]) sel.value = current;
-}
+
+/* ====== Lancer une séance ====== */
+$('startSessionBtn').addEventListener('click', ()=>{
+  const key = $('selectProgram').value;
+  if(!key || !programs[key]){ toast("Sélectionne un programme"); return; }
+  renderSession(programs[key]);
+  $('sessionCard').style.display = 'block';
+  freeLines = [];
+  renderFree();
+});
 
 /* ====== Rendu séance ====== */
-function updateProgram(){
-  const prog = $('programme').value;
+function renderSession(p){
   const zone = $('exercises'); zone.innerHTML = "";
-  if(!prog || !programmes[prog]) return;
+  const mode = p.mode;
+  const seriesPerEx = p.seriesPerEx || 3;
+  const rounds = p.rounds || 3;
 
-  programmes[prog].forEach((exo, exoIndex) => {
-    let html = `<div class="exercise-entry" id="exo-${exoIndex}">
-      <b>${exo.nom}</b>`;
+  const last = load(LAST_KEY) || {};
+  function imgButton(exo){
+    const url = exo.img||"";
+    return url ? ` <button class="btn" onclick="showIllustration('${encodeURIComponent(url)}','${encodeURIComponent(exo.name)}')">🖼️ Illustration</button>` : "";
+  }
 
-    // bouton illustration si image dispo (img ou banque)
-    const imgUrl = exo.img || IMAGE_BANK[exo.nom] || "";
-    if(imgUrl){
-      html += ` <button class="btn" style="margin-left:6px" onclick="showIllustration('${encodeURIComponent(imgUrl)}','${encodeURIComponent(exo.nom)}')">🖼️ Illustration</button>`;
-    }
-    html += `<br/>`;
-
-    if (exo.type === "running") {
-      const dList = exo.distance?.length ? exo.distance : [""];
-      const tList = exo.temps?.length ? exo.temps : [""];
-      for (let i=0;i<dList.length;i++){
-        const keyD = `distance-${exoIndex}-${i}`;
-        const keyT = `temps-${exoIndex}-${i}`;
-        const distVal = lastValues[keyD] || "";
-        const timeVal = lastValues[keyT] || "";
-        html += `<div class="series-row">
-            Sortie ${i+1} :
-            Distance (km) : <input type="number" id="${keyD}" placeholder="${dList[i]||""}" value="${distVal}">
-            Temps (min) : <input type="number" id="${keyT}" placeholder="${tList[i]||""}" value="${timeVal}">
-          </div>`;
+  if(mode==='series'){
+    p.exercises.forEach((exo,idx)=>{
+      const hint = (exo.type==='strength' ? (exo.hint||"") : (exo.dist?`${exo.dist}km`:""));
+      let html = `<div class="exercise-entry" id="exo-${idx}">
+        <b>${exo.name}</b> ${imgButton(exo)} ${hint?`<span class="tag">${hint}</span>`:""}<br/>`;
+      if(exo.type==='running'){
+        for(let s=0;s<seriesPerEx;s++){
+          const kd = `runD-${idx}-${s}`, kt = `runT-${idx}-${s}`;
+          html += `<div class="series-row">
+              Série ${s+1} :
+              Distance (km): <input type="number" id="${kd}" value="${last[kd]||""}" placeholder="${exo.dist||""}">
+              Temps (min): <input type="number" id="${kt}" value="${last[kt]||""}" placeholder="${exo.time||""}">
+            </div>`;
+        }
+      }else{
+        for(let s=0;s<seriesPerEx;s++){
+          const kp = `poids-${idx}-${s}`, kr = `rep-${idx}-${s}`;
+          html += `<div class="series-row">
+              Série ${s+1} :
+              Poids : <input type="text" id="${kp}" value="${last[kp]||""}" placeholder="${(exo.hint||'').split('/')[s]||''}">
+              Reps : <input type="number" id="${kr}" value="${last[kr]||""}">
+            </div>`;
+        }
       }
-    } else {
-      const po = exo.poids?.length ? exo.poids : ["","",""];
-      for (let s=0; s<po.length; s++){
-        const keyP = `poids-${exoIndex}-${s}`;
-        const keyR = `rep-${exoIndex}-${s}`;
-        const poidsVal = lastValues[keyP] || "";
-        const repsVal  = lastValues[keyR] || "";
-        html += `<div class="series-row">
-            Série ${s+1} :
-            Poids : <input type="text" id="${keyP}" placeholder="${po[s]||""}" value="${poidsVal}">
-            Reps : <input type="number" id="${keyR}" value="${repsVal}">
-          </div>`;
-      }
-    }
-
-    html += `<div class="row" style="flex-wrap:wrap">
-        <button class="btn good" onclick="markDone(${exoIndex}, this)">✅ Fait</button>
-        <button class="btn" onclick="startTimer(this,30)">⏱️ 30s</button>
+      html += `<div class="row">
+          <button class="btn good" onclick="markDone(${idx}, this)">✅ Fait</button>
+          <button class="btn" onclick="startTimer(this,30)">⏱️ 30s</button>
+          <button class="btn" onclick="startTimer(this,60)">⏱️ 1min</button>
+          <span class="timer" id="timer-${idx}"></span>
+        </div>
+      </div>`;
+      zone.insertAdjacentHTML('beforeend', html);
+    });
+  } else {
+    for(let r=0;r<rounds;r++){
+      let block = `<div class="exercise-entry"><b>Tour ${r+1} / ${rounds}</b>`;
+      p.exercises.forEach((exo,idx)=>{
+        const hint = (exo.type==='strength' ? (exo.hint||"") : (exo.dist?`${exo.dist}km`:""));
+        block += `<div class="series-row">
+          <span class="pill"><b>${exo.name}</b> ${hint?`<span class="tag">${hint}</span>`:""} ${imgButton(exo)}</span>`;
+        if(exo.type==='running'){
+          const kd = `cD-${r}-${idx}`, kt = `cT-${r}-${idx}`;
+          block += `Distance (km): <input type="number" id="${kd}" value="${last[kd]||""}" placeholder="${exo.dist||""}">
+                    Temps (min): <input type="number" id="${kt}" value="${last[kt]||""}" placeholder="${exo.time||""}">`;
+        }else{
+          const kp = `cP-${r}-${idx}`, kr = `cR-${r}-${idx}`;
+          block += `Poids: <input type="text" id="${kp}" value="${last[kp]||""}" placeholder="${(exo.hint||'').split('/')[0]||''}">
+                    Reps: <input type="number" id="${kr}" value="${last[kr]||""}">`;
+        }
+        block += `</div>`;
+      });
+      block += `<div class="row" style="margin-top:6px">
         <button class="btn" onclick="startTimer(this,60)">⏱️ 1min</button>
-        <span class="timer" id="timer-${exoIndex}"></span>
-      </div>
-    </div>`;
-    zone.insertAdjacentHTML('beforeend', html);
-  });
-}
-
-function markDone(index, btn){
-  btn.textContent = "✅ Terminé";
-  btn.disabled = true;
-}
-function startTimer(btn, duration){
-  const id = btn.parentElement.parentElement.id.split("-")[1];
-  const span = $("timer-"+id);
-  let t = duration;
-  btn.disabled = true;
-  span.textContent = `${t}s restantes`;
-  const itv = setInterval(()=>{
-    t--; span.textContent = t>=0 ? `${t}s restantes` : "";
-    if(t<0){ clearInterval(itv); btn.disabled=false; }
-  },1000);
-}
-
-/* ====== Sauvegarde / Historique ====== */
-function saveSession(){
-  const prog = $('programme').value;
-  if(!prog){ toast("Sélectionne un programme d’abord"); return; }
-
-  const date = new Date().toLocaleString();
-  let data = `📅 ${date} – Programme : ${prog}\n`;
-  const inputsToStore = {};
-
-  const exos = programmes[prog];
-  exos.forEach((exo, exoIndex) => {
-    data += `🔸 ${exo.nom} :\n`;
-    if (exo.type === "running") {
-      const dList = exo.distance?.length ? exo.distance : [""];
-      for (let i=0;i<dList.length;i++){
-        const d = ($(`distance-${exoIndex}-${i}`)||{}).value || "n.c.";
-        const t = ($(`temps-${exoIndex}-${i}`)||{}).value || "n.c.";
-        data += `   ➤ Séance ${i+1} – ${d} km en ${t} min\n`;
-        inputsToStore[`distance-${exoIndex}-${i}`]=d;
-        inputsToStore[`temps-${exoIndex}-${i}`]=t;
-      }
-    } else {
-      const len = (exo.poids?.length) || 3;
-      for (let s=0;s<len;s++){
-        const p = ($(`poids-${exoIndex}-${s}`)||{}).value || "n.c.";
-        const r = ($(`rep-${exoIndex}-${s}`)||{}).value || "n.c.";
-        data += `   ➤ Série ${s+1} – ${r} reps @ ${p}kg\n`;
-        inputsToStore[`poids-${exoIndex}-${s}`]=p;
-        inputsToStore[`rep-${exoIndex}-${s}`]=r;
-      }
+      </div></div>`;
+      zone.insertAdjacentHTML('beforeend', block);
     }
-  });
+  }
+}
 
-  const old = localStorage.getItem(HISTORY_KEY) || "";
+/* ====== Exercice libre ====== */
+function addFreeLine(){
+  freeLines.push({ name:"", type:"strength", poids:"", reps:"", dist:"", time:"" });
+  renderFree();
+}
+function clearFree(){ freeLines=[]; renderFree(); }
+function renderFree(){
+  const box = $('freeList'); box.innerHTML="";
+  if(!freeLines.length){ box.innerHTML = `<div class="muted">Aucun exercice libre ajouté.</div>`; return; }
+  freeLines.forEach((f, i)=>{
+    const row = document.createElement('div');
+    row.className="list-item";
+    row.innerHTML = `
+      <input style="flex:1" placeholder="Nom (ex: Squat jump)" value="${f.name}" oninput="freeLines[${i}].name=this.value"/>
+      <select style="width:140px" onchange="freeLines[${i}].type=this.value">
+        <option value="strength" ${f.type==='strength'?'selected':''}>Force</option>
+        <option value="running" ${f.type==='running'?'selected':''}>Running</option>
+      </select>
+      <div class="row" style="gap:6px">
+        <input placeholder="Poids" style="width:90px; display:${f.type==='strength'?'block':'none'}" value="${f.poids}" oninput="freeLines[${i}].poids=this.value"/>
+        <input type="number" placeholder="Reps" style="width:90px; display:${f.type==='strength'?'block':'none'}" value="${f.reps}" oninput="freeLines[${i}].reps=this.value"/>
+        <input type="number" step="0.1" placeholder="km" style="width:90px; display:${f.type==='running'?'block':'none'}" value="${f.dist}" oninput="freeLines[${i}].dist=this.value"/>
+        <input type="number" placeholder="min" style="width:90px; display:${f.type==='running'?'block':'none'}" value="${f.time}" oninput="freeLines[${i}].time=this.value"/>
+      </div>
+      <button class="btn danger" onclick="freeLines.splice(${i},1); renderFree()">🗑️</button>
+    `;
+    row.querySelector('select').addEventListener('change', ()=>renderFree());
+    box.appendChild(row);
+  });
+}
+
+/* ====== Actions séance ====== */
+function markDone(index, btn){ btn.textContent="✅ Terminé"; btn.disabled=true; }
+function startTimer(btn, duration){
+  const id = btn.closest('.exercise-entry').querySelector('.timer');
+  let t = duration; btn.disabled=true; if(id) id.textContent=`${t}s restantes`;
+  const itv = setInterval(()=>{ t--; if(id) id.textContent = t>=0?`${t}s restantes`:""; if(t<0){ clearInterval(itv); btn.disabled=false; } },1000);
+}
+
+function saveSession(){
+  const progName = $('selectProgram').value;
+  if(!progName || !programs[progName]){ toast("Sélectionne un programme"); return; }
+  const p = programs[progName];
+  const mode = p.mode;
+  const date = new Date().toLocaleString();
+
+  let data = `📅 ${date} – Programme : ${progName} (${mode})\n`;
+  const toLast = {};
+
+  if(mode==='series'){
+    p.exercises.forEach((exo, idx)=>{
+      data += `🔸 ${exo.name} :\n`;
+      if(exo.type==='running'){
+        for(let s=0;s<p.seriesPerEx;s++){
+          const kd = `runD-${idx}-${s}`, kt = `runT-${idx}-${s}`;
+          const d = (document.getElementById(kd)||{}).value || "n.c.";
+          const t = (document.getElementById(kt)||{}).value || "n.c.";
+          toLast[kd]=d; toLast[kt]=t;
+          data += `   ➤ Série ${s+1} – ${d} km en ${t} min\n`;
+        }
+      }else{
+        for(let s=0;s<p.seriesPerEx;s++){
+          const kp = `poids-${idx}-${s}`, kr = `rep-${idx}-${s}`;
+          const P = (document.getElementById(kp)||{}).value || "n.c.";
+          const R = (document.getElementById(kr)||{}).value || "n.c.";
+          toLast[kp]=P; toLast[kr]=R;
+          data += `   ➤ Série ${s+1} – ${R} reps @ ${P}\n`;
+        }
+      }
+    });
+  } else {
+    for(let r=0;r<(p.rounds||3);r++){
+      data += `— Tour ${r+1} —\n`;
+      p.exercises.forEach((exo, idx)=>{
+        if(exo.type==='running'){
+          const kd = `cD-${r}-${idx}`, kt = `cT-${r}-${idx}`;
+          const d = (document.getElementById(kd)||{}).value || "n.c.";
+          const t = (document.getElementById(kt)||{}).value || "n.c.";
+          toLast[kd]=d; toLast[kt]=t;
+          data += `   ${exo.name}: ${d} km en ${t} min\n`;
+        }else{
+          const kp = `cP-${r}-${idx}`, kr = `cR-${r}-${idx}`;
+          const P = (document.getElementById(kp)||{}).value || "n.c.";
+          const R = (document.getElementById(kr)||{}).value || "n.c.";
+          toLast[kp]=P; toLast[kr]=R;
+          data += `   ${exo.name}: ${R} reps @ ${P}\n`;
+        }
+      });
+    }
+  }
+
+  // Exos libres
+  if(freeLines.length){
+    data += `➕ Exercices libres :\n`;
+    freeLines.forEach(f=>{
+      if(f.type==='running'){
+        data += `   ${f.name}: ${f.dist||'n.c.'} km en ${f.time||'n.c.'} min\n`;
+      }else{
+        data += `   ${f.name}: ${f.reps||'n.c.'} reps @ ${f.poids||'n.c.'}\n`;
+      }
+    });
+  }
+
+  const old = (localStorage.getItem(HISTORY_KEY)||"");
   localStorage.setItem(HISTORY_KEY, data + "\n\n" + old);
-  localStorage.setItem(LAST_KEY, JSON.stringify(inputsToStore));
+  save(LAST_KEY, toLast);
   toast("💾 Séance enregistrée !");
+  freeLines=[]; renderFree();
   displayHistory();
 }
-function displayHistory(){
-  const h = (localStorage.getItem(HISTORY_KEY) || "").trim();
-  const box = $('history'); box.innerHTML = "";
-  if(!h){ box.textContent = "Aucune séance encore."; return; }
 
+/* ====== Historique ====== */
+function displayHistory(){
+  const h = (localStorage.getItem(HISTORY_KEY)||"").trim();
+  const box = $('history'); box.innerHTML="";
+  if(!h){ box.textContent="Aucune séance encore."; return; }
   const sessions = h.split("\n\n");
-  sessions.forEach((entry, idx) => {
+  sessions.forEach((entry, idx)=>{
     const firstLine = entry.split("\n")[0] || "Séance";
     const div = document.createElement('div');
     div.className = "hist-item";
@@ -431,106 +729,35 @@ function deleteSession(index, summaryEnc){
   displayHistory();
   toast("Séance supprimée 🗑️");
 }
-function loadLastSession(){
-  try{
-    const raw = localStorage.getItem(LAST_KEY);
-    if(!raw) return;
-    Object.assign(lastValues, JSON.parse(raw));
-  }catch(e){ console.warn("Erreur lecture ancienne séance", e); }
-}
 
-/* ====== Modal images ====== */
+/* ====== Modal image ====== */
 function showIllustration(urlEnc, nameEnc){
-  const url = decodeURIComponent(urlEnc);
-  const name = decodeURIComponent(nameEnc);
-  $('imgView').src = url;
-  $('imgTitle').textContent = name;
-  $('imgModal').classList.add('open');
+  const url=decodeURIComponent(urlEnc), name=decodeURIComponent(nameEnc);
+  $('imgView').src=url; $('imgTitle').textContent=name; $('imgModal').classList.add('open');
 }
 function hideModal(){ $('imgModal').classList.remove('open'); $('imgView').src=""; }
 function closeModal(e){ if(e.target.id==='imgModal') hideModal(); }
 
-/* ====== Créateur de programmes ====== */
-let buffer = []; // exercices en attente d’ajout
-
-function setImageUrl(url){ $('c_img').value = url; toast("URL image copiée dans le champ"); }
-
-$('toggleCreator').addEventListener('click', ()=>{
-  const c = $('creatorCard');
-  c.style.display = (c.style.display==='none' || !c.style.display) ? 'block' : 'none';
-});
-
-$('c_exo_type').addEventListener('change', ()=>{
-  const t = $('c_exo_type').value;
-  $('c_strength_block').style.display = (t==='strength') ? 'block' : 'none';
-  $('c_running_block').style.display = (t==='running') ? 'block' : 'none';
-});
-
-function addExerciseToBuffer(){
-  const name = $('c_exo_name').value.trim();
-  const type = $('c_exo_type').value;
-  const img  = $('c_img').value.trim();
-
-  if(!name){ toast("Nom de l’exercice manquant"); return; }
-
-  if(type==='strength'){
-    const p1 = $('c_p1').value.trim();
-    const p2 = $('c_p2').value.trim();
-    const p3 = $('c_p3').value.trim();
-    buffer.push({ nom:name, type:'strength', poids:[p1,p2,p3], img });
-  }else{
-    const d1 = $('c_d1').value.trim();
-    const t1 = $('c_t1').value.trim();
-    buffer.push({ nom:name, type:'running', distance:[d1||""], temps:[t1||""], img });
-  }
-
-  $('c_exo_name').value = ''; $('c_img').value='';
-  $('c_p1').value=''; $('c_p2').value=''; $('c_p3').value='';
-  $('c_d1').value=''; $('c_t1').value='';
-  renderBuffer();
-}
-function clearBuffer(){ buffer=[]; renderBuffer(); }
-function renderBuffer(){
-  const box = $('bufferList');
-  if(!buffer.length){ box.textContent = "Aucun pour le moment."; return; }
-  box.innerHTML = buffer.map((e,i)=>`<div>• ${e.nom} <span class="muted">(${e.type})</span>${e.img?` – <span class="muted">img ok</span>`:''}</div>`).join('');
-}
-
-function saveProgram(){
-  const name = $('c_name').value.trim();
-  if(!name){ toast("Nom du programme manquant"); return; }
-  if(!buffer.length){ toast("Ajoute au moins un exercice"); return; }
-  const user = loadUserPrograms();
-  user[name] = JSON.parse(JSON.stringify(buffer)); // clone
-  saveUserPrograms(user);
-  buffer=[]; renderBuffer();
-  computeProgrammes(); // refresh list
-  $('programme').value = name;
-  updateProgram();
-  toast("Programme enregistré !");
-}
-
-function loadProgramInCreator(){
-  const user = loadUserPrograms();
-  const keys = Object.keys(user);
-  if(!keys.length){ toast("Aucun programme utilisateur trouvé"); return; }
-  const name = prompt("Nom exact du programme à charger :", keys[0]);
-  if(!name || !user[name]){ toast("Introuvable"); return; }
-  $('c_name').value = name;
-  buffer = JSON.parse(JSON.stringify(user[name]));
-  renderBuffer();
-  toast("Programme chargé en zone d’édition");
-}
+/* ====== Stats page btn ====== */
+$('openStats').addEventListener('click', ()=> window.open('graph.html','_blank') );
 
 /* ====== Init ====== */
-$('openStats').addEventListener('click', openStats);
 displayQuote();
-computeProgrammes();
-loadLastSession();
-// set default selection (premier)
-const firstProg = Object.keys(programmes)[0] || "";
-if(firstProg) $('programme').value = firstProg;
-updateProgram();
+refreshProgramSelects();
+renderCatalog();
+renderProgramList();
+
+const first = Object.keys(programs)[0];
+if(first){
+  tempProgram = JSON.parse(JSON.stringify(programs[first]));
+  $('progName').value = tempProgram.name;
+  $('progMode').value = tempProgram.mode;
+  $('seriesCount').value = tempProgram.seriesPerEx;
+  $('rounds').value = tempProgram.rounds;
+  $('seriesCountWrap').style.display = (tempProgram.mode==='series')?'block':'none';
+  $('roundsWrap').style.display = (tempProgram.mode==='circuit')?'block':'none';
+  renderProgramList();
+}
 displayHistory();
 </script>
 </body>
