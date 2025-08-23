@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>FitGamify — Programmes</title>
+<title>FitGamify — Programmes & Exercices</title>
 <style>
   :root {
     --bg:#0f172a; --card:#0b1220cc; --muted:#94a3b8; --accent:#60a5fa; --accent-2:#22d3ee;
     --text:#e5e7eb; --ok:#22c55e; --danger:#ef4444;
   }
   html,body{margin:0;padding:0;background:linear-gradient(135deg,#0b1220,#111827);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
-  .container{max-width:900px;margin:0 auto;padding:20px}
+  .container{max-width:1000px;margin:0 auto;padding:20px}
   h1{font-size:1.6rem;margin:.2rem 0 1rem}
   .card{background:var(--card);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
   .row{display:flex;gap:10px;flex-wrap:wrap}
-  .col{flex:1 1 220px}
+  .col{flex:1 1 220px;min-width:220px}
   label{display:block;color:var(--muted);font-size:.85rem;margin:.3rem 0}
   input,select,textarea{width:100%;padding:.65rem .75rem;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--text)}
   input::placeholder{color:#93a0b3}
@@ -23,19 +23,18 @@
   .btn.secondary{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.18)}
   .btn.danger{background:linear-gradient(135deg,#ef4444,#f97316);color:white}
   .btn.ok{background:linear-gradient(135deg,#22c55e,#10b981);color:#05210f}
-  .btn:disabled{opacity:.6;cursor:not-allowed}
-  .exercise-chip{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.15);padding:10px;border-radius:10px}
-  .tiny{font-size:.8rem;color:var(--muted)}
+  .pill{display:inline-block;padding:.15rem .5rem;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);font-size:.78rem;color:#c7d2fe}
+  .tiny{font-size:.84rem;color:var(--muted)}
+  .divider{height:1px;background:rgba(255,255,255,.08);margin:12px 0}
   .list-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.12);border-radius:10px;margin:8px 0;background:rgba(255,255,255,.03)}
   .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+  .chip{display:flex;gap:8px;align-items:flex-start;border:1px dashed rgba(255,255,255,.15);padding:10px;border-radius:10px;background:rgba(255,255,255,.03)}
+  .img-prev{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.14)}
   .toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer}
   .chev{transition:.2s transform}
   .collapsed .chev{transform:rotate(-90deg)}
   .collapsed .collapsible{display:none}
-  .pill{display:inline-block;padding:.15rem .5rem;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);font-size:.78rem;color:#c7d2fe}
-  .hint{color:#93c5fd;font-size:.85rem}
-  .divider{height:1px;background:rgba(255,255,255,.08);margin:10px 0}
-  .img-prev{width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.14)}
   /* Toast */
   #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:rgba(0,0,0,.85);color:white;padding:.6rem .9rem;border-radius:8px;font-size:.95rem;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:9999}
   #toast.show{opacity:1}
@@ -43,23 +42,74 @@
 </head>
 <body>
   <div class="container">
-    <h1>🧱 FitGamify — Programmes</h1>
+    <h1>🧱 FitGamify — Exercices & Programmes</h1>
 
-    <!-- SECTION CRÉER / MODIFIER (réductible) -->
-    <div id="builder-card" class="card">
-      <div class="toggle" onclick="toggleBuilder()">
+    <!-- CATALOGUE EXERCICES -->
+    <div class="card">
+      <div class="toggle" onclick="toggleCard('ex-card')">
         <div>
-          <strong>Créer / Modifier un programme</strong>
-          <div class="tiny">Ajoute un programme, des exercices, choisis l’exécution <span class="pill">Séries</span> ou <span class="pill">Set/Circuit</span>.</div>
+          <strong>📚 Catalogue d’exercices</strong>
+          <div class="tiny">Crée/édite des exercices réutilisables (avec reps, poids et/ou durée, + image URL).</div>
         </div>
         <div class="chev">▼</div>
       </div>
 
-      <div class="collapsible" style="margin-top:10px">
+      <div id="ex-card" class="collapsible" style="margin-top:10px">
+        <div class="row">
+          <div class="col">
+            <label>Nom de l’exercice</label>
+            <input id="exName" placeholder="ex: Squat, Tirage, Course, Planche…" />
+          </div>
+          <div class="col">
+            <label>Répétitions (optionnel)</label>
+            <input id="exReps" placeholder="ex: 10 ou 8-12" />
+          </div>
+          <div class="col">
+            <label>Poids suggéré (optionnel)</label>
+            <input id="exWeight" placeholder="ex: 40kg, PDC…" />
+          </div>
+          <div class="col">
+            <label>Durée (sec/min) (optionnel)</label>
+            <input id="exTime" placeholder="ex: 30s, 1min, 90s" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label>URL image (optionnel)</label>
+            <input id="exImg" placeholder="https://…/illustration.png" />
+          </div>
+          <div class="col" style="display:flex;align-items:flex-end;gap:8px">
+            <button class="btn ok" onclick="saveExercise()">💾 Enregistrer/Mettre à jour</button>
+            <button class="btn secondary" onclick="resetExerciseForm()">Réinitialiser</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="row">
+          <div class="col">
+            <label>🔎 Rechercher</label>
+            <input id="exSearch" placeholder="Filtrer par nom…" oninput="renderExerciseList()" />
+          </div>
+        </div>
+        <div id="exerciseList" class="grid"></div>
+      </div>
+    </div>
+
+    <!-- CONSTRUCTEUR DE PROGRAMMES -->
+    <div class="card">
+      <div class="toggle" onclick="toggleCard('prog-card')">
+        <div>
+          <strong>🧩 Créer / Modifier un programme</strong>
+          <div class="tiny">Assemble tes programmes à partir des exercices du catalogue, ou ajoute-en à la volée.</div>
+        </div>
+        <div class="chev">▼</div>
+      </div>
+
+      <div id="prog-card" class="collapsible" style="margin-top:10px">
         <div class="row">
           <div class="col">
             <label>Nom du programme</label>
-            <input id="progName" placeholder="ex: Full Body, Street Workout, Running..." />
+            <input id="progName" placeholder="ex: Full Body, Street Workout, Running…" />
           </div>
           <div class="col">
             <label>Mode d’exécution</label>
@@ -73,43 +123,51 @@
         <div class="divider"></div>
         <div class="row">
           <div class="col">
-            <label>Nom de l’exercice</label>
-            <input id="exName" placeholder="ex: Squat, Tirage horizontal..." />
+            <label>Ajouter depuis le catalogue</label>
+            <select id="catalogPicker"></select>
           </div>
-          <div class="col">
-            <label>Réps par série <span class="tiny">(optionnel)</span></label>
-            <input id="exReps" type="text" placeholder="ex: 10 (ou 10-12)" />
-          </div>
-          <div class="col">
-            <label>Poids suggéré <span class="tiny">(optionnel)</span></label>
-            <input id="exWeight" type="text" placeholder="ex: 40kg, PDC..." />
-          </div>
-        </div>
-        <div class="row">
-          <div class="col">
-            <label>URL image (optionnel)</label>
-            <input id="exImg" placeholder="https://…/mon_exercice.png" />
-            <div class="tiny hint">Tu peux mettre une URL d’illustration (ex : image trouvée sur le net).</div>
-          </div>
-          <div class="col" style="display:flex;align-items:flex-end">
-            <button class="btn secondary" onclick="addExercise()">+ Ajouter l’exercice</button>
+          <div class="col" style="display:flex;align-items:flex-end;gap:8px">
+            <button class="btn secondary" onclick="addFromCatalog()">+ Ajouter</button>
           </div>
         </div>
 
-        <div id="exerciseList"></div>
+        <div class="tiny" style="margin:.25rem 0">…ou ajouter un exercice personnalisé juste pour ce programme :</div>
+        <div class="row">
+          <div class="col">
+            <label>Nom</label>
+            <input id="inlineName" placeholder="ex: Squat jump (bonus)" />
+          </div>
+          <div class="col">
+            <label>Répétitions</label>
+            <input id="inlineReps" placeholder="ex: 20" />
+          </div>
+          <div class="col">
+            <label>Poids</label>
+            <input id="inlineWeight" placeholder="ex: PDC / 10kg…" />
+          </div>
+          <div class="col">
+            <label>Durée</label>
+            <input id="inlineTime" placeholder="ex: 60s" />
+          </div>
+          <div class="col" style="display:flex;align-items:flex-end">
+            <button class="btn secondary" onclick="addInlineExercise()">+ Ajouter au programme</button>
+          </div>
+        </div>
+
+        <div id="programExerciseList" style="margin-top:10px"></div>
 
         <div class="divider"></div>
         <div class="actions">
           <button class="btn ok" onclick="saveProgram()">💾 Enregistrer le programme</button>
-          <button class="btn secondary" onclick="resetForm()">Réinitialiser</button>
+          <button class="btn secondary" onclick="resetProgramForm()">Réinitialiser</button>
         </div>
       </div>
     </div>
 
-    <!-- SECTION MES PROGRAMMES -->
+    <!-- MES PROGRAMMES -->
     <div class="card">
-      <strong>Mes programmes</strong>
-      <div class="tiny">Clique sur <b>Voir</b> pour prévisualiser la structure, <b>Éditer</b> pour modifier, <b>Supprimer</b> pour enlever.</div>
+      <strong>📂 Mes programmes</strong>
+      <div class="tiny">Voir / Éditer / Supprimer. La page Entraînement lira automatiquement cette liste.</div>
       <div id="programList" style="margin-top:10px"></div>
     </div>
 
@@ -117,103 +175,206 @@
   </div>
 
 <script>
-  const LS_KEY = "fit_programs_v2";
-  const LS_BUILDER_OPEN = "fit_builder_open";
-  let editingName = null;       // si on modifie un programme existant
-  let bufferExercises = [];     // exercices en cours d'édition
+  const LS_EX = "fit_exercises_v1";
+  const LS_PROG = "fit_programs_v2";
 
-  // ---- UI helpers
+  let exEditing = null;           // nom en édition (exercice)
+  let progEditing = null;         // nom en édition (programme)
+  let progBuffer = [];            // exercices du programme courant
+
+  // ---------- TOAST ----------
   function toast(msg){
     const t=document.getElementById('toast');
     t.textContent=msg;t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'),1600);
   }
-  function toggleBuilder(){
-    const card=document.getElementById('builder-card');
-    const collapsed=card.classList.toggle('collapsed');
-    localStorage.setItem(LS_BUILDER_OPEN, collapsed? "0":"1");
+
+  // ---------- TOGGLES ----------
+  function toggleCard(id){
+    const card = document.getElementById(id);
+    const wrapper = card.parentElement; // .card
+    wrapper.classList.toggle('collapsed');
   }
 
-  // ---- Storage
+  // ---------- STORAGE HELPERS ----------
+  function loadExercises(){
+    try{ return JSON.parse(localStorage.getItem(LS_EX)) || {}; }catch(e){ return {}; }
+  }
+  function saveExercises(obj){ localStorage.setItem(LS_EX, JSON.stringify(obj)); }
+
   function loadPrograms(){
-    try{
-      return JSON.parse(localStorage.getItem(LS_KEY)) || {};
-    }catch(e){ return {}; }
+    try{ return JSON.parse(localStorage.getItem(LS_PROG)) || {}; }catch(e){ return {}; }
   }
-  function savePrograms(obj){
-    localStorage.setItem(LS_KEY, JSON.stringify(obj));
+  function savePrograms(obj){ localStorage.setItem(LS_PROG, JSON.stringify(obj)); }
+
+  // ---------- EXERCISES (CATALOGUE) ----------
+  function renderExerciseList(){
+    const list = document.getElementById('exerciseList');
+    const search = (document.getElementById('exSearch').value || "").toLowerCase();
+    const ex = loadExercises();
+    const names = Object.keys(ex).sort();
+
+    const filtered = names.filter(n => n.toLowerCase().includes(search));
+
+    if(filtered.length===0){
+      list.innerHTML = '<div class="tiny">Aucun exercice. Ajoute-en un ci-dessus 😉</div>';
+      renderCatalogPicker(); // keep picker in sync
+      return;
+    }
+
+    list.innerHTML = filtered.map(n=>{
+      const e = ex[n];
+      return `
+        <div class="chip">
+          ${e.img?`<img class="img-prev" src="${e.img}" alt="img" onerror="this.style.display='none'">`:``}
+          <div style="flex:1">
+            <div><b>${n}</b></div>
+            <div class="tiny">
+              ${e.reps?`Reps: ${e.reps} · `:``}
+              ${e.weight?`Poids: ${e.weight} · `:``}
+              ${e.time?`Durée: ${e.time} · `:``}
+              ${e.img?`<span>Image: oui</span>`:``}
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" onclick="editExercise('${encodeURIComponent(n)}')">Éditer</button>
+            <button class="btn danger" onclick="deleteExercise('${encodeURIComponent(n)}')">Supprimer</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    renderCatalogPicker();
   }
 
-  // ---- Builder form
-  function addExercise(){
-    const name = document.getElementById('exName').value.trim();
-    const reps = document.getElementById('exReps').value.trim();
-    const weight = document.getElementById('exWeight').value.trim();
-    const img = document.getElementById('exImg').value.trim();
+  function renderCatalogPicker(){
+    const sel = document.getElementById('catalogPicker');
+    const ex = loadExercises();
+    const names = Object.keys(ex).sort();
+    sel.innerHTML = names.length
+      ? `<option value="">-- Sélectionne un exercice --</option>` + names.map(n=>`<option>${n}</option>`).join("")
+      : `<option value="">(aucun exercice dans le catalogue)</option>`;
+  }
 
-    if(!name){ toast("Donne un nom à l’exercice 🙂"); return; }
+  function saveExercise(){
+    const name = (document.getElementById('exName').value || "").trim();
+    const reps = (document.getElementById('exReps').value || "").trim();
+    const weight = (document.getElementById('exWeight').value || "").trim();
+    const time = (document.getElementById('exTime').value || "").trim();
+    const img = (document.getElementById('exImg').value || "").trim();
+    if(!name){ toast("Nom de l’exercice requis"); return; }
 
-    bufferExercises.push({ name, reps, weight, img });
+    const store = loadExercises();
+    // si renommage
+    if(exEditing && exEditing !== name){
+      delete store[exEditing];
+    }
+    store[name] = { reps, weight, time, img };
+    saveExercises(store);
     renderExerciseList();
+    exEditing = name;
+    toast("Exercice enregistré ✅");
+  }
+
+  function editExercise(nameEnc){
+    const name = decodeURIComponent(nameEnc);
+    const ex = loadExercises()[name];
+    if(!ex){ toast("Introuvable"); return; }
+    exEditing = name;
+    document.getElementById('exName').value = name;
+    document.getElementById('exReps').value = ex.reps || "";
+    document.getElementById('exWeight').value = ex.weight || "";
+    document.getElementById('exTime').value = ex.time || "";
+    document.getElementById('exImg').value = ex.img || "";
+    toast("Edition de l’exercice chargée ✏️");
+  }
+
+  function deleteExercise(nameEnc){
+    const name = decodeURIComponent(nameEnc);
+    if(!confirm(`Supprimer l’exercice « ${name} » ?`)) return;
+    const store = loadExercises();
+    delete store[name];
+    saveExercises(store);
+    if(exEditing===name){ resetExerciseForm(); }
+    renderExerciseList();
+    toast("Exercice supprimé 🗑️");
+  }
+
+  function resetExerciseForm(){
+    exEditing = null;
     document.getElementById('exName').value="";
     document.getElementById('exReps').value="";
     document.getElementById('exWeight').value="";
+    document.getElementById('exTime').value="";
     document.getElementById('exImg').value="";
   }
 
-  function removeExercise(idx){
-    bufferExercises.splice(idx,1);
-    renderExerciseList();
+  // ---------- PROGRAM BUILDER ----------
+  function addFromCatalog(){
+    const pick = document.getElementById('catalogPicker').value;
+    if(!pick){ toast("Choisis un exercice du catalogue"); return; }
+    const ex = loadExercises()[pick];
+    progBuffer.push({ name: pick, ...ex });
+    renderProgramBuffer();
   }
 
-  function renderExerciseList(){
-    const wrap = document.getElementById('exerciseList');
-    if(bufferExercises.length===0){ wrap.innerHTML = '<div class="tiny" style="margin-top:6px">Aucun exercice ajouté pour l’instant.</div>'; return; }
-    wrap.innerHTML = bufferExercises.map((ex,i)=>`
-      <div class="exercise-chip">
-        ${ex.img ? `<img class="img-prev" src="${ex.img}" alt="img" onerror="this.style.display='none'">` : ``}
-        <div style="flex:1">
-          <div><b>${ex.name}</b> ${ex.reps?`· ${ex.reps} reps`:``} ${ex.weight?`· ${ex.weight}`:``}</div>
-          ${ex.img?`<div class="tiny">${ex.img}</div>`:``}
+  function addInlineExercise(){
+    const name = (document.getElementById('inlineName').value || "").trim();
+    const reps = (document.getElementById('inlineReps').value || "").trim();
+    const weight = (document.getElementById('inlineWeight').value || "").trim();
+    const time = (document.getElementById('inlineTime').value || "").trim();
+    if(!name){ toast("Nom requis"); return; }
+    progBuffer.push({ name, reps, weight, time, img:"" });
+    renderProgramBuffer();
+    document.getElementById('inlineName').value="";
+    document.getElementById('inlineReps').value="";
+    document.getElementById('inlineWeight').value="";
+    document.getElementById('inlineTime').value="";
+  }
+
+  function renderProgramBuffer(){
+    const wrap = document.getElementById('programExerciseList');
+    if(progBuffer.length===0){ wrap.innerHTML = '<div class="tiny">Aucun exercice ajouté à ce programme.</div>'; return; }
+    wrap.innerHTML = progBuffer.map((e,i)=>`
+      <div class="list-item">
+        <div>
+          <div><b>${e.name}</b> ${e.reps?`· ${e.reps} reps`:``} ${e.weight?`· ${e.weight}`:``} ${e.time?`· ${e.time}`:``}</div>
+          ${e.img?`<div class="tiny">${e.img}</div>`:``}
         </div>
-        <button class="btn danger" onclick="removeExercise(${i})">Supprimer</button>
+        <div class="actions">
+          <button class="btn secondary" onclick="moveUp(${i})">↑</button>
+          <button class="btn secondary" onclick="moveDown(${i})">↓</button>
+          <button class="btn danger" onclick="removeFromProgram(${i})">Retirer</button>
+        </div>
       </div>
     `).join("");
   }
 
-  function resetForm(){
-    editingName = null;
-    bufferExercises = [];
-    document.getElementById('progName').value = "";
-    document.getElementById('execMode').value = "series";
-    renderExerciseList();
-    toast("Formulaire réinitialisé");
-  }
+  function moveUp(i){ if(i<=0) return; [progBuffer[i-1], progBuffer[i]]=[progBuffer[i], progBuffer[i-1]]; renderProgramBuffer(); }
+  function moveDown(i){ if(i>=progBuffer.length-1) return; [progBuffer[i+1], progBuffer[i]]=[progBuffer[i], progBuffer[i+1]]; renderProgramBuffer(); }
+  function removeFromProgram(i){ progBuffer.splice(i,1); renderProgramBuffer(); }
 
   function saveProgram(){
     const name = (document.getElementById('progName').value || "").trim();
     const mode = document.getElementById('execMode').value;
     if(!name){ toast("Nom du programme requis"); return; }
-    if(bufferExercises.length===0){ toast("Ajoute au moins un exercice"); return; }
-
+    if(progBuffer.length===0){ toast("Ajoute au moins un exercice au programme"); return; }
     const store = loadPrograms();
-    // Si on renomme un programme en cours d’édition
-    if(editingName && editingName !== name){
-      delete store[editingName];
+    if(progEditing && progEditing !== name){
+      delete store[progEditing];
     }
-    store[name] = { mode, exercises: bufferExercises };
+    store[name] = { mode, exercises: progBuffer };
     savePrograms(store);
+    progEditing = name;
     renderProgramList();
     toast("Programme enregistré ✅");
-    editingName = name;
   }
 
   function renderProgramList(){
     const list = document.getElementById('programList');
     const store = loadPrograms();
-    const names = Object.keys(store);
+    const names = Object.keys(store).sort();
     if(names.length===0){ list.innerHTML = '<div class="tiny">Aucun programme pour le moment.</div>'; return; }
-
     list.innerHTML = names.map(n=>{
       const p = store[n];
       return `
@@ -223,7 +384,7 @@
             <div class="tiny">${p.exercises.length} exercice(s)</div>
           </div>
           <div class="actions">
-            <button class="btn secondary" onclick="preview('${encodeURIComponent(n)}')">Voir</button>
+            <button class="btn secondary" onclick="previewProg('${encodeURIComponent(n)}')">Voir</button>
             <button class="btn" onclick="editProgram('${encodeURIComponent(n)}')">Éditer</button>
             <button class="btn danger" onclick="deleteProgram('${encodeURIComponent(n)}')">Supprimer</button>
           </div>
@@ -232,11 +393,11 @@
     }).join("");
   }
 
-  function preview(nameEnc){
+  function previewProg(nameEnc){
     const name = decodeURIComponent(nameEnc);
     const p = loadPrograms()[name];
     if(!p){ toast("Introuvable"); return; }
-    const lines = p.exercises.map((e,i)=>`• ${i+1}. ${e.name}${e.reps?` — ${e.reps} reps`:``}${e.weight?` — ${e.weight}`:``}`).join("\n");
+    const lines = p.exercises.map((e,i)=>`• ${i+1}. ${e.name}${e.reps?` — ${e.reps} reps`:``}${e.weight?` — ${e.weight}`:``}${e.time?` — ${e.time}`:``}`).join("\n");
     alert(`🏷️ ${name}\nMode: ${p.mode==="series"?"Séries":"Set/Circuit"}\n\n${lines}`);
   }
 
@@ -244,34 +405,40 @@
     const name = decodeURIComponent(nameEnc);
     const p = loadPrograms()[name];
     if(!p){ toast("Introuvable"); return; }
-    editingName = name;
+    progEditing = name;
     document.getElementById('progName').value = name;
     document.getElementById('execMode').value = p.mode || "series";
-    bufferExercises = (p.exercises || []).map(e=>({...e}));
-    renderExerciseList();
+    progBuffer = (p.exercises || []).map(e=>({...e}));
+    renderProgramBuffer();
 
-    // ouvrir la section si elle est fermée
-    const card=document.getElementById('builder-card');
-    if(card.classList.contains('collapsed')) toggleBuilder();
-    toast("Edition du programme chargée ✏️");
+    // ouvre le panneau si fermé
+    const card = document.getElementById('prog-card');
+    const wrapper = card.parentElement;
+    if(wrapper.classList.contains('collapsed')) toggleCard('prog-card');
+    toast("Édition du programme chargée ✏️");
   }
 
   function deleteProgram(nameEnc){
     const name = decodeURIComponent(nameEnc);
-    if(!confirm(`Supprimer définitivement « ${name} » ?`)) return;
+    if(!confirm(`Supprimer le programme « ${name} » ?`)) return;
     const store = loadPrograms();
     delete store[name];
     savePrograms(store);
-    if(editingName===name) resetForm();
+    if(progEditing===name) resetProgramForm();
     renderProgramList();
     toast("Programme supprimé 🗑️");
   }
 
-  // ---- Init
+  function resetProgramForm(){
+    progEditing = null;
+    progBuffer = [];
+    document.getElementById('progName').value="";
+    document.getElementById('execMode').value="series";
+    renderProgramBuffer();
+  }
+
+  // ---------- INIT ----------
   (function init(){
-    // état d’ouverture/fermeture mémorisé
-    const open = localStorage.getItem(LS_BUILDER_OPEN);
-    if(open==="0"){ document.getElementById('builder-card').classList.add('collapsed'); }
     renderExerciseList();
     renderProgramList();
   })();
