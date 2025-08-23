@@ -1,95 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FitGamify – Entraînement</title>
+  <style>
+    :root{
+      --bg1:#0f1623; --bg2:#1b2433; --card:#121a28; --border:#273349;
+      --txt:#e8efff; --muted:#9fb2d3; --glow1:#6a8bff; --glow2:#b26bff; --ok:#2ecc71; --btn:#4f7cff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; color:var(--txt);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      background:radial-gradient(1200px 600px at 10% -10%, #1f2a40 0%, transparent 60%),
+                 linear-gradient(135deg, var(--bg1), var(--bg2));
+      padding:18px; display:flex; justify-content:center;
+    }
+    .wrap{width:100%; max-width:900px}
+    h1{margin:.2rem 0 1rem; font-size:1.7rem;
+      background:linear-gradient(90deg,var(--glow1),var(--glow2));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;}
+    .quote{color:var(--muted); font-style:italic; margin-bottom:12px}
+    .card{background:linear-gradient(180deg,#121a28,#0d1523);
+      border:1px solid var(--border); border-radius:16px; padding:16px; margin:12px 0}
+    label{display:block; color:var(--muted); font-size:.9rem; margin:.35rem 0}
+    select,input[type="text"],input[type="number"]{
+      width:100%; padding:.6rem .7rem; border-radius:10px; border:1px solid var(--border);
+      background:rgba(255,255,255,.04); color:var(--txt);
+    }
+    .exercise-entry{background:#0e1626; border:1px solid var(--border); border-radius:12px; padding:10px; margin:10px 0}
+    .series-row{display:flex; gap:8px; flex-wrap:wrap; margin:6px 0}
+    .series-row > *{flex:1 1 120px}
+    .btn{background:linear-gradient(135deg,#4f7cff,#22d3ee); color:#0b1020; border:none; border-radius:10px;
+      padding:.5rem .8rem; font-weight:700; cursor:pointer}
+    .btn:disabled{opacity:.6; cursor:default}
+    .btn-ok{background:linear-gradient(135deg,#2ecc71,#27ae60); color:#09141f}
+    .actions{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px}
+    .timer{color:var(--muted); font-size:.9rem}
+    #history{max-height:260px; overflow-y:auto; background:rgba(255,255,255,.03);
+      border:1px solid var(--border); border-radius:12px; padding:10px}
+    #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:rgba(0,0,0,.85);color:#fff;
+      padding:.6rem .9rem;border-radius:8px;opacity:0;transition:opacity .2s;z-index:9999}
+    #toast.show{opacity:1}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏋️ FitGamify – Entraînement</h1>
+  <p class="quote" id="quote">“L'entraînement ne ment jamais.”</p>
+
+  <div class="card">
+    <h3 style="margin:0 0 10px">📋 Choisis ton programme</h3>
+    <label for="programme">Programme</label>
+    <select id="programme" onchange="updateProgram()"></select>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 10px">📆 Séance du jour</h3>
+    <div id="exercises"></div>
+    <div class="actions">
+      <button class="btn" onclick="saveSession()">💾 Enregistrer la séance</button>
+      <button class="btn" onclick="location.href='index.html'">⬅️ Accueil</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 10px">📊 Historique local</h3>
+    <div id="history">Aucune séance encore.</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
 <script>
-// lit les programmes créés dans Programmes.html
-function loadProgramsFromLS(){
-  try { return JSON.parse(localStorage.getItem("fit_programs_v2")) || {}; }
-  catch(e){ return {}; }
+/* ------- Citations ------- */
+const quotes = [
+  "“Ce qui te semble impossible aujourd’hui sera ton échauffement demain.”",
+  "“Pousse-toi toi-même, personne ne le fera à ta place.”",
+  "“La discipline, c’est choisir entre ce que tu veux maintenant et ce que tu veux vraiment.”",
+  "“Vise le progrès, pas la perfection.”",
+  "“Pas besoin d’être extrême, juste régulier.”",
+  "“La sueur, c’est juste la graisse qui pleure.”",
+  "“Les excuses ne brûlent pas de calories.”",
+  "“Un jour ou jour un : à toi de choisir.”",
+  "“Ta plus grande arme, c’est ta constance.”",
+  "“Plus tu transpires à l'entraînement, moins tu pleures en compétition.”"
+];
+function displayQuote(){ document.getElementById("quote").innerText = quotes[Math.floor(Math.random()*quotes.length)]; }
+
+/* ------- Storage keys ------- */
+const LS_PROGRAMS = "fit_programs_v2";
+const LS_HISTORY  = "fitHistory";
+const LS_LAST     = "fitLastInputs";
+
+/* ------- Fallback programmes (si aucun programme enregistré) ------- */
+const fallbackPrograms = {
+  "Full Body": {
+    mode:"series",
+    exercises: [
+      { name:"Squat machine press", type:"strength", suggested:["50","80","80"] },
+      { name:"Split squat", type:"strength", suggested:["10","10","10"] },
+      { name:"Deadlift", type:"strength", suggested:["40","40","40"] }
+    ]
+  },
+  "Running": {
+    mode:"set",
+    exercises: [
+      { name:"Course (Distance)", type:"running", distance:["5"], time:["30"] }
+    ]
+  }
+};
+
+/* ------- Utils ------- */
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1400); }
+function loadPrograms(){ try{const x=JSON.parse(localStorage.getItem(LS_PROGRAMS)); return x && Object.keys(x).length? x : fallbackPrograms;}catch(e){return fallbackPrograms;} }
+function loadHistory(){ return localStorage.getItem(LS_HISTORY)||""; }
+function saveHistory(s){ localStorage.setItem(LS_HISTORY, s); }
+function loadLast(){ try{return JSON.parse(localStorage.getItem(LS_LAST))||{};}catch(e){return{}} }
+function saveLast(o){ localStorage.setItem(LS_LAST, JSON.stringify(o)); }
+
+/* ------- Rendu ------- */
+let programs = loadPrograms();
+let lastInputs = loadLast();
+
+function populateProgramSelect(){
+  const sel = document.getElementById('programme');
+  sel.innerHTML = `<option value="">-- Sélectionner --</option>` +
+    Object.keys(programs).sort().map(n=>`<option value="${n}">${n}</option>`).join("");
 }
 
-// remplit le <select id="programme">
-function populateProgrammeSelect(){
-  const sel = document.getElementById("programme");
-  const store = loadProgramsFromLS();
-  const names = Object.keys(store).sort();
-  sel.innerHTML = `<option value="">-- Sélectionner --</option>` + names.map(n=>`<option>${n}</option>`).join("");
-}
-
-// exemple d'updateProgram qui sait gérer rep/poids ET durée
 function updateProgram(){
-  const store = loadProgramsFromLS();
-  const progName = document.getElementById("programme").value;
-  const zone = document.getElementById("exercises");
+  const progName = document.getElementById('programme').value;
+  const zone = document.getElementById('exercises');
   zone.innerHTML = "";
-  if(!progName || !store[progName]) return;
+  if(!progName) return;
 
-  const program = store[progName];
-  program.exercises.forEach((exo, idx) => {
-    const hasTime = (exo.time && exo.time.trim().length>0);
-    let html = `<div class="exercise-entry" id="exo-${idx}">`;
-    html += `<b>${exo.name}</b>`;
-    if(exo.reps) html += ` · ${exo.reps} reps`;
-    if(exo.weight) html += ` · ${exo.weight}`;
-    if(exo.time) html += ` · ${exo.time}`;
-    html += `<br/>`;
+  const prog = programs[progName];
+  if(!prog || !Array.isArray(prog.exercises)){ zone.innerHTML = "<div>Aucun exercice.</div>"; return; }
 
-    // 3 séries par défaut sur le suivi (tu peux ajuster si nécessaire)
-    if(hasTime){
-      // suivi au temps
-      html += `
-        <div class="series-row">
-          Série 1 : Durée (sec) <input type="number" id="time-${idx}-0" placeholder="${parseTimeToSec(exo.time)}">
-          <button class="btn" onclick="startTimer(this, getVal('time-${idx}-0')||${parseTimeToSec(exo.time)})">⏱️ Go</button>
-        </div>
-        <div class="series-row">
-          Série 2 : Durée (sec) <input type="number" id="time-${idx}-1" placeholder="${parseTimeToSec(exo.time)}">
-          <button class="btn" onclick="startTimer(this, getVal('time-${idx}-1')||${parseTimeToSec(exo.time)})">⏱️ Go</button>
-        </div>
-        <div class="series-row">
-          Série 3 : Durée (sec) <input type="number" id="time-${idx}-2" placeholder="${parseTimeToSec(exo.time)}">
-          <button class="btn" onclick="startTimer(this, getVal('time-${idx}-2')||${parseTimeToSec(exo.time)})">⏱️ Go</button>
-        </div>
-      `;
+  prog.exercises.forEach((exo, idx) => {
+    const isRun = exo.type==="running";
+    let html = `<div class="exercise-entry" id="exo-${idx}">
+      <strong>${exo.name || exo.nom || "Exercice"}</strong>`;
+
+    if(isRun){
+      const dKey=`distance-${idx}-0`, tKey=`temps-${idx}-0`;
+      const dVal = lastInputs[dKey] || (exo.distance?.[0] || "");
+      const tVal = lastInputs[tKey] || (exo.time?.[0] || exo.temps?.[0] || "");
+      html += `<div class="series-row">
+        <div><label>Distance (km)</label><input type="number" id="${dKey}" value="${dVal}" placeholder="${exo.distance?.[0]||''}" /></div>
+        <div><label>Temps (min)</label><input type="number" id="${tKey}" value="${tVal}" placeholder="${(exo.time?.[0]||exo.temps?.[0]||'')}" /></div>
+      </div>`;
     } else {
-      // suivi reps/poids
-      for(let s=0;s<3;s++){
-        html += `
-          <div class="series-row">
-            Série ${s+1} :
-            Poids : <input type="text" id="poids-${idx}-${s}" placeholder="${exo.weight||''}">
-            Reps : <input type="number" id="rep-${idx}-${s}" placeholder="${inferReps(exo.reps)||''}">
-          </div>
-        `;
+      const sugg = exo.suggested || exo.poids || ["","",""];
+      for(let s=0; s<3; s++){
+        const pKey=`poids-${idx}-${s}`, rKey=`rep-${idx}-${s}`;
+        const pVal = lastInputs[pKey] || "";
+        const rVal = lastInputs[rKey] || "";
+        html += `<div class="series-row">
+          <div><label>Série ${s+1} — Poids (kg)</label><input type="text" id="${pKey}" value="${pVal}" placeholder="${sugg[s]||''}" /></div>
+          <div><label>Répétitions</label><input type="number" id="${rKey}" value="${rVal}" /></div>
+        </div>`;
       }
     }
 
-    html += `
-      <button class="btn" onclick="markDone(${idx}, this)">✅ Fait</button>
-      <button class="btn" onclick="startTimer(this, 30)">⏱️ Récup 30s</button>
-      <button class="btn" onclick="startTimer(this, 60)">⏱️ Récup 1min</button>
+    html += `<div class="actions">
+      <button class="btn btn-ok" onclick="markDone(${idx}, this)">✅ Fait</button>
+      <button class="btn" onclick="startTimer(this,30)">⏱️ Récup 30s</button>
+      <button class="btn" onclick="startTimer(this,60)">⏱️ Récup 1min</button>
       <span class="timer" id="timer-${idx}"></span>
-    </div>`;
+    </div></div>`;
 
-    zone.innerHTML += html;
+    zone.insertAdjacentHTML('beforeend', html);
   });
 }
 
-// helpers
-function inferReps(repStr){ if(!repStr) return ""; const m = repStr.match(/\d+/); return m? m[0] : ""; }
-function parseTimeToSec(t){
-  if(!t) return 30;
-  const s=t.toLowerCase().trim();
-  if(s.endsWith("min")){ const n=parseFloat(s); return isNaN(n)?60:Math.round(n*60); }
-  if(s.endsWith("s")){ const n=parseFloat(s); return isNaN(n)?30:Math.round(n); }
-  const n=parseFloat(s); return isNaN(n)?30:Math.round(n);
+function markDone(index, btn){
+  btn.textContent = "✅ Terminé";
+  btn.disabled = true;
 }
-function getVal(id){ const el=document.getElementById(id); return el? parseInt(el.value,10):null; }
 
-// conserve tes fonctions existantes: markDone, startTimer, saveSession, etc.
-// -> juste appelle populateProgrammeSelect() au chargement.
+function startTimer(btn, duration){
+  const id = btn.parentElement.parentElement.id.split("-")[1];
+  const span = document.getElementById("timer-"+id);
+  let t = duration;
+  btn.disabled = true;
+  const it = setInterval(()=>{
+    span.textContent = `${t}s restantes`;
+    t--;
+    if(t<0){ clearInterval(it); span.textContent=""; btn.disabled=false; }
+  },1000);
+}
 
-window.addEventListener("load", ()=>{
-  populateProgrammeSelect();
-  // si tu veux auto-charger le 1er programme :
-  // const sel = document.getElementById("programme");
-  // if(sel.options.length>1){ sel.selectedIndex = 1; updateProgram(); }
-});
+/* ------- Save / History ------- */
+function saveSession(){
+  const progName = document.getElementById('programme').value;
+  if(!progName){ toast("Sélectionne un programme"); return; }
+
+  const prog = programs[progName];
+  let inputs = {};
+  let out = `📅 ${new Date().toLocaleString()} — Programme : ${progName}\n`;
+
+  prog.exercises.forEach((exo, idx)=>{
+    out += `🔸 ${exo.name || exo.nom} :\n`;
+    if(exo.type==="running"){
+      const d = document.getElementById(`distance-${idx}-0`).value || "n.c.";
+      const m = document.getElementById(`temps-${idx}-0`).value || "n.c.";
+      out += `   ➤ ${d} km en ${m} min\n`;
+      inputs[`distance-${idx}-0`] = d; inputs[`temps-${idx}-0`] = m;
+    } else {
+      for(let s=0; s<3; s++){
+        const p = document.getElementById(`poids-${idx}-${s}`).value || "n.c.";
+        const r = document.getElementById(`rep-${idx}-${s}`).value || "n.c.";
+        out += `   ➤ Série ${s+1} — ${r} reps @ ${p}kg\n`;
+        inputs[`poids-${idx}-${s}`]=p; inputs[`rep-${idx}-${s}`]=r;
+      }
+    }
+  });
+
+  const old = loadHistory();
+  saveHistory(out + "\n\n" + old);
+  saveLast(inputs);
+  toast("💾 Séance enregistrée !");
+  displayHistory();
+}
+
+function displayHistory(){
+  const container = document.getElementById('history');
+  const h = loadHistory().trim();
+  if(!h){ container.textContent="Aucune séance encore."; return; }
+
+  const sessions = h.split("\n\n");
+  container.innerHTML = sessions.map((entry, idx)=>{
+    const first = (entry.split("\n")[0]||"Séance").replace(/</g,"&lt;");
+    return `<div style="border-bottom:1px solid var(--border); padding:6px 0; display:flex; gap:10px;">
+      <pre style="margin:0; white-space:pre-wrap; flex:1">${entry.replace(/</g,"&lt;")}</pre>
+      <button class="btn" style="background:#e53935;color:white" onclick="deleteSession(${idx}, '${encodeURIComponent(first)}')">🗑️</button>
+    </div>`;
+  }).join("");
+}
+
+function deleteSession(index, summaryEnc){
+  const summary = decodeURIComponent(summaryEnc);
+  if(!confirm(`Supprimer définitivement ?\n\n${summary}`)) return;
+  const h = loadHistory().trim();
+  const sessions = h? h.split("\n\n") : [];
+  sessions.splice(index, 1);
+  saveHistory(sessions.join("\n\n"));
+  displayHistory();
+  toast("Séance supprimée 🗑️");
+}
+
+/* ------- Init ------- */
+(function init(){
+  displayQuote();
+  populateProgramSelect();
+  displayHistory();
+})();
 </script>
+</body>
+</html>
