@@ -1,0 +1,95 @@
+<script>
+// lit les programmes créés dans Programmes.html
+function loadProgramsFromLS(){
+  try { return JSON.parse(localStorage.getItem("fit_programs_v2")) || {}; }
+  catch(e){ return {}; }
+}
+
+// remplit le <select id="programme">
+function populateProgrammeSelect(){
+  const sel = document.getElementById("programme");
+  const store = loadProgramsFromLS();
+  const names = Object.keys(store).sort();
+  sel.innerHTML = `<option value="">-- Sélectionner --</option>` + names.map(n=>`<option>${n}</option>`).join("");
+}
+
+// exemple d'updateProgram qui sait gérer rep/poids ET durée
+function updateProgram(){
+  const store = loadProgramsFromLS();
+  const progName = document.getElementById("programme").value;
+  const zone = document.getElementById("exercises");
+  zone.innerHTML = "";
+  if(!progName || !store[progName]) return;
+
+  const program = store[progName];
+  program.exercises.forEach((exo, idx) => {
+    const hasTime = (exo.time && exo.time.trim().length>0);
+    let html = `<div class="exercise-entry" id="exo-${idx}">`;
+    html += `<b>${exo.name}</b>`;
+    if(exo.reps) html += ` · ${exo.reps} reps`;
+    if(exo.weight) html += ` · ${exo.weight}`;
+    if(exo.time) html += ` · ${exo.time}`;
+    html += `<br/>`;
+
+    // 3 séries par défaut sur le suivi (tu peux ajuster si nécessaire)
+    if(hasTime){
+      // suivi au temps
+      html += `
+        <div class="series-row">
+          Série 1 : Durée (sec) <input type="number" id="time-${idx}-0" placeholder="${parseTimeToSec(exo.time)}">
+          <button class="btn" onclick="startTimer(this, getVal('time-${idx}-0')||${parseTimeToSec(exo.time)})">⏱️ Go</button>
+        </div>
+        <div class="series-row">
+          Série 2 : Durée (sec) <input type="number" id="time-${idx}-1" placeholder="${parseTimeToSec(exo.time)}">
+          <button class="btn" onclick="startTimer(this, getVal('time-${idx}-1')||${parseTimeToSec(exo.time)})">⏱️ Go</button>
+        </div>
+        <div class="series-row">
+          Série 3 : Durée (sec) <input type="number" id="time-${idx}-2" placeholder="${parseTimeToSec(exo.time)}">
+          <button class="btn" onclick="startTimer(this, getVal('time-${idx}-2')||${parseTimeToSec(exo.time)})">⏱️ Go</button>
+        </div>
+      `;
+    } else {
+      // suivi reps/poids
+      for(let s=0;s<3;s++){
+        html += `
+          <div class="series-row">
+            Série ${s+1} :
+            Poids : <input type="text" id="poids-${idx}-${s}" placeholder="${exo.weight||''}">
+            Reps : <input type="number" id="rep-${idx}-${s}" placeholder="${inferReps(exo.reps)||''}">
+          </div>
+        `;
+      }
+    }
+
+    html += `
+      <button class="btn" onclick="markDone(${idx}, this)">✅ Fait</button>
+      <button class="btn" onclick="startTimer(this, 30)">⏱️ Récup 30s</button>
+      <button class="btn" onclick="startTimer(this, 60)">⏱️ Récup 1min</button>
+      <span class="timer" id="timer-${idx}"></span>
+    </div>`;
+
+    zone.innerHTML += html;
+  });
+}
+
+// helpers
+function inferReps(repStr){ if(!repStr) return ""; const m = repStr.match(/\d+/); return m? m[0] : ""; }
+function parseTimeToSec(t){
+  if(!t) return 30;
+  const s=t.toLowerCase().trim();
+  if(s.endsWith("min")){ const n=parseFloat(s); return isNaN(n)?60:Math.round(n*60); }
+  if(s.endsWith("s")){ const n=parseFloat(s); return isNaN(n)?30:Math.round(n); }
+  const n=parseFloat(s); return isNaN(n)?30:Math.round(n);
+}
+function getVal(id){ const el=document.getElementById(id); return el? parseInt(el.value,10):null; }
+
+// conserve tes fonctions existantes: markDone, startTimer, saveSession, etc.
+// -> juste appelle populateProgrammeSelect() au chargement.
+
+window.addEventListener("load", ()=>{
+  populateProgrammeSelect();
+  // si tu veux auto-charger le 1er programme :
+  // const sel = document.getElementById("programme");
+  // if(sel.options.length>1){ sel.selectedIndex = 1; updateProgram(); }
+});
+</script>
