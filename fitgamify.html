@@ -1,764 +1,280 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>FitGamify – Builder + Séance (GitHub Import)</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FitGamify — Programmes</title>
 <style>
-  :root{
-    --bg1:#0f1623; --bg2:#1b2433; --card:#121a28; --border:#273349;
-    --txt:#e8efff; --muted:#9fb2d3; --glow1:#6a8bff; --glow2:#b26bff;
-    --btn:#3157ff; --btn2:#263247; --good:#22c55e; --danger:#e53935;
+  :root {
+    --bg:#0f172a; --card:#0b1220cc; --muted:#94a3b8; --accent:#60a5fa; --accent-2:#22d3ee;
+    --text:#e5e7eb; --ok:#22c55e; --danger:#ef4444;
   }
-  *{box-sizing:border-box}
-  body{
-    margin:0; padding:18px; color:var(--txt);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-    background:radial-gradient(1200px 600px at 10% -10%, #1f2a40 0%, transparent 60%),
-               linear-gradient(135deg, var(--bg1), var(--bg2));
-  }
-  .wrap{max-width:980px; margin:0 auto; display:grid; gap:14px}
-  header{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
-  h1{
-    margin:0; font-size:1.6rem;
-    background:linear-gradient(90deg,var(--glow1),var(--glow2));
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-  }
-  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-  .btn{
-    background:var(--btn2); color:#e8efff; border:1px solid #3a4a67;
-    padding:.55rem .8rem; border-radius:10px; cursor:pointer; font-weight:600; text-decoration:none;
-  }
-  .btn.primary{ background:var(--btn); border-color:var(--btn) }
-  .btn.good{ background:var(--good); border-color:transparent; color:#0b2a13 }
-  .btn.danger{ background:var(--danger); border-color:transparent }
-  .btn:disabled{opacity:.6; cursor:default}
-  .card{
-    background:linear-gradient(180deg,#121a28,#0d1523);
-    border:1px solid var(--border); border-radius:16px; padding:16px;
-    box-shadow:0 10px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03);
-  }
-  h2{margin:.2rem 0 1rem; font-size:1.1rem}
-  h3{margin:.2rem 0 .6rem; font-size:1rem; color:#cfe3ff}
-  .muted{color:var(--muted)}
-  select, input[type="number"], input[type="text"], textarea{
-    background:#0f1725; color:var(--txt); border:1px solid #334155;
-    padding:10px 12px; border-radius:10px; outline:none; width:100%;
-  }
-  .two{display:grid; gap:10px}
-  @media(min-width:850px){ .two{grid-template-columns:1.2fr .8fr} }
-  .exercise-entry{
-    background:#0f1725; border:1px solid #243149; border-radius:12px;
-    padding:10px; margin:8px 0;
-  }
-  .series-row{display:flex; flex-direction:column; gap:8px; margin:.3rem 0}
-  @media(min-width:520px){ .series-row{flex-direction:row; align-items:center} }
-  .timer{color:var(--muted); font-size:.9rem; margin-left:.4rem}
-  #history{max-height:320px; overflow:auto; display:grid; gap:8px}
-  .hist-item{display:flex; gap:10px; align-items:flex-start; background:#0f1725; border:1px solid #243149; border-radius:10px; padding:10px}
-  .hist-item pre{margin:0; white-space:pre-wrap; color:#cfe3ff}
-  .right{margin-left:auto; display:flex; gap:8px}
-  .quote{color:var(--muted); font-style:italic; margin:.2rem 0 1rem}
-  .pill{display:inline-flex; gap:8px; align-items:center; padding:6px 10px; background:#0f1725; border:1px solid #243149; border-radius:999px}
-  .tag{background:#13203a; border:1px solid #243149; padding:2px 6px; border-radius:999px; font-size:.85rem; color:#cfe3ff}
-  .list{display:grid; gap:8px; max-height:280px; overflow:auto}
-  .list-item{display:flex; align-items:center; gap:8px; background:#0f1725; border:1px solid #243149; border-radius:10px; padding:8px}
-  .list-item .name{flex:1}
-  .ghost{opacity:.6}
-  /* Modal image */
-  .modal{position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:9999}
-  .modal.open{display:flex}
-  .modal-card{background:#0b1220; border:1px solid #29405f; border-radius:14px; padding:10px; max-width:92vw; max-height:92vh; display:grid; gap:8px}
-  .modal-card img{max-width:90vw; max-height:80vh; border-radius:10px}
-  .modal-head{display:flex; align-items:center; justify-content:space-between; gap:8px}
+  html,body{margin:0;padding:0;background:linear-gradient(135deg,#0b1220,#111827);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+  .container{max-width:900px;margin:0 auto;padding:20px}
+  h1{font-size:1.6rem;margin:.2rem 0 1rem}
+  .card{background:var(--card);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .col{flex:1 1 220px}
+  label{display:block;color:var(--muted);font-size:.85rem;margin:.3rem 0}
+  input,select,textarea{width:100%;padding:.65rem .75rem;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--text)}
+  input::placeholder{color:#93a0b3}
+  textarea{min-height:80px}
+  .btn{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#0b1020;border:none;border-radius:10px;padding:.6rem .9rem;font-weight:600;cursor:pointer}
+  .btn.secondary{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.18)}
+  .btn.danger{background:linear-gradient(135deg,#ef4444,#f97316);color:white}
+  .btn.ok{background:linear-gradient(135deg,#22c55e,#10b981);color:#05210f}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .exercise-chip{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.15);padding:10px;border-radius:10px}
+  .tiny{font-size:.8rem;color:var(--muted)}
+  .list-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.12);border-radius:10px;margin:8px 0;background:rgba(255,255,255,.03)}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer}
+  .chev{transition:.2s transform}
+  .collapsed .chev{transform:rotate(-90deg)}
+  .collapsed .collapsible{display:none}
+  .pill{display:inline-block;padding:.15rem .5rem;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);font-size:.78rem;color:#c7d2fe}
+  .hint{color:#93c5fd;font-size:.85rem}
+  .divider{height:1px;background:rgba(255,255,255,.08);margin:10px 0}
+  .img-prev{width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.14)}
   /* Toast */
-  #toast{position:fixed; left:50%; transform:translateX(-50%); bottom:16px; background:rgba(0,0,0,.85); color:#fff; padding:.6rem .9rem; border-radius:10px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:9999}
+  #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:rgba(0,0,0,.85);color:white;padding:.6rem .9rem;border-radius:8px;font-size:.95rem;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:9999}
   #toast.show{opacity:1}
-  details summary{cursor:pointer; user-select:none; color:#cfe3ff}
 </style>
 </head>
 <body>
-<div class="wrap">
+  <div class="container">
+    <h1>🧱 FitGamify — Programmes</h1>
 
-  <header>
-    <h1>🏋️ FitGamify – Builder & Séance</h1>
-    <div class="row">
-      <a class="btn" href="index.html">🏠 Accueil</a>
-      <button id="openStats" class="btn">📊 Statistiques</button>
-    </div>
-  </header>
-  <p class="quote" id="quote">“L’entraînement ne ment jamais.”</p>
+    <!-- SECTION CRÉER / MODIFIER (réductible) -->
+    <div id="builder-card" class="card">
+      <div class="toggle" onclick="toggleBuilder()">
+        <div>
+          <strong>Créer / Modifier un programme</strong>
+          <div class="tiny">Ajoute un programme, des exercices, choisis l’exécution <span class="pill">Séries</span> ou <span class="pill">Set/Circuit</span>.</div>
+        </div>
+        <div class="chev">▼</div>
+      </div>
 
-  <!-- BUILDER -->
-  <div class="card">
-    <h2>🧰 Créer / Modifier un programme</h2>
-    <div class="two">
-      <!-- Colonne gauche: définition programme -->
-      <div>
-        <div class="row" style="gap:8px">
-          <div style="flex:2">
-            <div class="muted">Nom du programme</div>
-            <input id="progName" placeholder="ex: Full Body Force"/>
+      <div class="collapsible" style="margin-top:10px">
+        <div class="row">
+          <div class="col">
+            <label>Nom du programme</label>
+            <input id="progName" placeholder="ex: Full Body, Street Workout, Running..." />
           </div>
-          <div style="flex:1">
-            <div class="muted">Mode</div>
-            <select id="progMode">
-              <option value="series">Séries (finir les séries exo par exo)</option>
-              <option value="circuit">Circuit / Set (enchaîner tous les exos, X tours)</option>
+          <div class="col">
+            <label>Mode d’exécution</label>
+            <select id="execMode">
+              <option value="series">Séries (exercice par exercice)</option>
+              <option value="set">Set / Circuit (enchaîner tous, puis répéter)</option>
             </select>
           </div>
-          <div style="flex:1" id="seriesCountWrap">
-            <div class="muted">Séries/exo</div>
-            <input id="seriesCount" type="number" min="1" max="10" value="3"/>
-          </div>
-          <div style="flex:1; display:none" id="roundsWrap">
-            <div class="muted">Tours (circuit)</div>
-            <input id="rounds" type="number" min="1" max="20" value="3"/>
-          </div>
         </div>
 
-        <div style="margin-top:10px">
-          <div class="muted">Exercices du programme (ordre = ordre d’exécution)</div>
-          <div id="programList" class="list"></div>
-          <div class="row" style="margin-top:8px">
-            <button class="btn good" id="saveProgramBtn">💾 Enregistrer / Écraser</button>
-            <button class="btn" id="loadProgramBtn">📥 Charger</button>
-            <button class="btn danger" id="clearProgramBtn">🧽 Vider</button>
-          </div>
-        </div>
-
-        <!-- IMPORT GITHUB -->
-        <details style="margin-top:14px">
-          <summary>📥 Importer les exercices depuis ton dossier <code>images/</code> (GitHub)</summary>
-          <div class="exercise-entry" style="margin-top:8px">
-            <div class="row">
-              <input id="ghOwner" placeholder="owner (ex: tonPseudo)" style="flex:1"/>
-              <input id="ghRepo"  placeholder="repo (ex: tonRepoPages)" style="flex:1"/>
-            </div>
-            <div class="row">
-              <input id="ghBranch" value="main" placeholder="branche (main/gh-pages)" style="flex:1"/>
-              <input id="ghPath"   value="images" placeholder="chemin (images)" style="flex:1"/>
-            </div>
-            <div class="row">
-              <select id="ghDefaultType" style="flex:1">
-                <option value="strength">Type par défaut: Force/Muscu</option>
-                <option value="running">Type par défaut: Running</option>
-              </select>
-              <input id="ghNameTransform" placeholder="Remplacements nom (ex: _: , -: )" style="flex:2"/>
-            </div>
-            <div class="row">
-              <button class="btn" id="ghScanBtn">🔎 Scanner & synchroniser</button>
-              <span class="muted">Ajoute/Met à jour automatiquement les exercices (image = <code>path/nomFichier</code>).</span>
-            </div>
-            <div id="ghResult" class="muted" style="margin-top:6px"></div>
-          </div>
-        </details>
-      </div>
-
-      <!-- Colonne droite: catalogue exercice -->
-      <div>
-        <h3>📚 Catalogue d’exercices</h3>
+        <div class="divider"></div>
         <div class="row">
-          <input id="exoName" placeholder="Nom ex: Squat, Traction…"/>
+          <div class="col">
+            <label>Nom de l’exercice</label>
+            <input id="exName" placeholder="ex: Squat, Tirage horizontal..." />
+          </div>
+          <div class="col">
+            <label>Réps par série <span class="tiny">(optionnel)</span></label>
+            <input id="exReps" type="text" placeholder="ex: 10 (ou 10-12)" />
+          </div>
+          <div class="col">
+            <label>Poids suggéré <span class="tiny">(optionnel)</span></label>
+            <input id="exWeight" type="text" placeholder="ex: 40kg, PDC..." />
+          </div>
         </div>
         <div class="row">
-          <select id="exoType" style="flex:1">
-            <option value="strength">Force/Muscu</option>
-            <option value="running">Running</option>
-          </select>
-          <input id="exoImg" placeholder="URL image (optionnel)" style="flex:2"/>
-        </div>
-
-        <!-- Aperçu image -->
-        <div id="imgPreviewWrap" class="muted" style="margin-top:6px; display:none;">
-          <span>Aperçu :</span>
-          <div style="margin-top:6px;">
-            <img id="imgPreview" alt="aperçu exercice" style="max-width:180px; max-height:120px; border-radius:8px; border:1px solid #243149;">
+          <div class="col">
+            <label>URL image (optionnel)</label>
+            <input id="exImg" placeholder="https://…/mon_exercice.png" />
+            <div class="tiny hint">Tu peux mettre une URL d’illustration (ex : image trouvée sur le net).</div>
+          </div>
+          <div class="col" style="display:flex;align-items:flex-end">
+            <button class="btn secondary" onclick="addExercise()">+ Ajouter l’exercice</button>
           </div>
         </div>
 
-        <div class="row" id="exoDefaultsStrength" style="margin-top:6px">
-          <input id="exoHint" placeholder="Indices ex: 50/80/80 (kg)"/>
+        <div id="exerciseList"></div>
+
+        <div class="divider"></div>
+        <div class="actions">
+          <button class="btn ok" onclick="saveProgram()">💾 Enregistrer le programme</button>
+          <button class="btn secondary" onclick="resetForm()">Réinitialiser</button>
         </div>
-        <div class="row" id="exoDefaultsRun" style="display:none; margin-top:6px">
-          <input id="exoDist" type="number" step="0.1" placeholder="km par défaut"/>
-          <input id="exoTime" type="number" step="1" placeholder="min par défaut"/>
-        </div>
-        <div class="row" style="margin-top:8px">
-          <button class="btn" id="addExoToCatalog">➕ Ajouter au catalogue</button>
-        </div>
-
-        <div class="muted" style="margin-top:8px">Catalogue (clic ➕ pour l’ajouter au programme)</div>
-        <div id="catalogList" class="list"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SÉANCE -->
-  <div class="card">
-    <h2>🎯 Lancer une séance</h2>
-    <div class="row">
-      <select id="selectProgram"></select>
-      <button class="btn primary" id="startSessionBtn">▶ Démarrer</button>
-    </div>
-  </div>
-
-  <div class="card" id="sessionCard" style="display:none">
-    <h2>📆 Séance en cours</h2>
-    <div id="exercises"></div>
-
-    <div class="exercise-entry" style="margin-top:10px">
-      <b>➕ Exercice libre (optionnel)</b>
-      <div id="freeList" class="list"></div>
-      <div class="row" style="margin-top:6px">
-        <button class="btn" onclick="addFreeLine()">Ajouter une ligne</button>
-        <button class="btn danger" onclick="clearFree()">Effacer libres</button>
       </div>
     </div>
 
-    <div class="row" style="margin-top:8px">
-      <button class="btn primary" onclick="saveSession()">💾 Enregistrer la séance</button>
+    <!-- SECTION MES PROGRAMMES -->
+    <div class="card">
+      <strong>Mes programmes</strong>
+      <div class="tiny">Clique sur <b>Voir</b> pour prévisualiser la structure, <b>Éditer</b> pour modifier, <b>Supprimer</b> pour enlever.</div>
+      <div id="programList" style="margin-top:10px"></div>
     </div>
+
+    <div id="toast"></div>
   </div>
-
-  <!-- HISTORIQUE -->
-  <div class="card">
-    <h2>📂 Historique local</h2>
-    <div id="history">Aucune séance encore.</div>
-  </div>
-
-</div>
-
-<!-- Modal image -->
-<div id="imgModal" class="modal" onclick="closeModal(event)">
-  <div class="modal-card">
-    <div class="modal-head">
-      <div id="imgTitle" class="muted">Illustration</div>
-      <button class="btn danger" onclick="hideModal()">Fermer ✖</button>
-    </div>
-    <img id="imgView" src="" alt="illustration"/>
-  </div>
-</div>
-
-<div id="toast"></div>
 
 <script>
-/* ====== Constantes & clés ====== */
-const HISTORY_KEY = "fitHistory";
-const PROGS_KEY   = "fitProgramsV3";
-const CATALOG_KEY = "fitCatalogV1";
-const LAST_KEY    = "fitLastInputs";
+  const LS_KEY = "fit_programs_v2";
+  const LS_BUILDER_OPEN = "fit_builder_open";
+  let editingName = null;       // si on modifie un programme existant
+  let bufferExercises = [];     // exercices en cours d'édition
 
-const quotes = [
-  "“Ce qui te semble impossible aujourd’hui sera ton échauffement demain.”",
-  "“Pousse-toi toi-même, personne ne le fera à ta place.”",
-  "“La discipline, c’est choisir entre ce que tu veux maintenant et ce que tu veux vraiment.”",
-  "“Vise le progrès, pas la perfection.”",
-  "“Pas besoin d’être extrême, juste régulier.”",
-  "“La sueur, c’est juste la graisse qui pleure.”",
-  "“Les excuses ne brûlent pas de calories.”",
-  "“Un combat se gagne d’abord dans la tête, ensuite sur le ring.”",
-  "“Un jour ou jour un : à toi de choisir.”",
-  "“La douleur est temporaire, l’abandon est éternel.”"
-];
-
-/* ====== État ====== */
-let programs = load(PROGS_KEY) || {};
-let catalog  = load(CATALOG_KEY) || seedCatalog();
-let lastVals = load(LAST_KEY) || {};
-let freeLines = []; // exercices libres pendant séance
-
-/* ====== Helpers ====== */
-const $ = id => document.getElementById(id);
-function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1200); }
-function load(k){ try{ return JSON.parse(localStorage.getItem(k)||""); }catch{ return null; } }
-function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
-function titleFromFilename(fn){
-  // enlève extension
-  const base = fn.replace(/\.[a-z0-9]+$/i, "");
-  // remplacements optionnels fournis (ex: "_: , -: ")
-  const mapTxt = $('ghNameTransform')?.value || "";
-  let name = base;
-  mapTxt.split(",").forEach(pair=>{
-    const [from,to] = pair.split(":").map(s=> (s||"").trim());
-    if(from){ name = name.split(from).join(to||" "); }
-  });
-  // fallback: tirets/underscores -> espace, capitalisation mots
-  name = name.replace(/[-_]+/g," ").trim();
-  name = name.split(" ").map(w=> w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
-  return name;
-}
-
-/* ====== Seed catalogue minimal ====== */
-function seedCatalog(){
-  return [
-    { name:"Squat machine press", type:"strength", img:"images/squat.png", hint:"50/80/80" },
-    { name:"Deadlift", type:"strength", img:"images/deadlift.jpg", hint:"40/40/40" },
-    { name:"Traction", type:"strength", img:"", hint:"PDC/PDC/PDC" },
-    { name:"Course (Distance)", type:"running", img:"", dist:5, time:30 },
-  ];
-}
-
-/* ====== UI init ====== */
-function displayQuote(){
-  $('quote').textContent = quotes[Math.floor(Math.random()*quotes.length)];
-}
-function refreshProgramSelects(){
-  const sel = $('selectProgram');
-  const keys = Object.keys(programs);
-  sel.innerHTML = keys.length ? keys.map(k=>`<option value="${k}">${k}</option>`).join('') : '<option value="">(Aucun programme)</option>';
-}
-function renderCatalog(){
-  const box = $('catalogList'); box.innerHTML = "";
-  if(!catalog.length){ box.innerHTML = `<div class="muted">Catalogue vide</div>`; return; }
-  catalog.forEach((c,i)=>{
-    const div = document.createElement('div');
-    div.className="list-item";
-    div.innerHTML = `
-      <div class="name"><b>${c.name}</b> <span class="tag">${c.type}</span> ${c.img?'<span class="tag">🖼️</span>':''} ${c.hint?`<span class="tag">${c.hint}</span>`:''} ${c.dist?`<span class="tag">${c.dist}km</span>`:''}
-      </div>
-      <button class="btn" onclick="addCatalogToProgram(${i})">➕</button>`;
-    box.appendChild(div);
-  });
-}
-function renderProgramList(){
-  const name = $('progName').value.trim();
-  const p = programs[name] || tempProgram;
-  const cont = $('programList'); cont.innerHTML="";
-  if(!p || !p.exercises || !p.exercises.length){
-    cont.innerHTML = `<div class="muted">Aucun exercice encore. Utilise le catalogue ➕ ou l’import GitHub.</div>`;
-    return;
+  // ---- UI helpers
+  function toast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),1600);
   }
-  p.exercises.forEach((ex,idx)=>{
-    const row = document.createElement('div');
-    row.className="list-item";
-    row.innerHTML = `
-      <div class="name"><b>${ex.name}</b> <span class="tag">${ex.type}</span> ${ex.img?'<span class="tag">🖼️</span>':''}</div>
-      <div class="row">
-        <button class="btn" onclick="moveEx(${idx}, -1)">⬆️</button>
-        <button class="btn" onclick="moveEx(${idx}, 1)">⬇️</button>
-        <button class="btn danger" onclick="removeEx(${idx})">🗑️</button>
-      </div>`;
-    cont.appendChild(row);
-  });
-}
-
-/* ====== Programme temporaire (avant sauvegarde) ====== */
-let tempProgram = { name:"", mode:"series", seriesPerEx:3, rounds:3, exercises:[] };
-
-function syncBuilderHeaderToTemp(){
-  tempProgram.name = $('progName').value.trim();
-  tempProgram.mode = $('progMode').value;
-  tempProgram.seriesPerEx = parseInt($('seriesCount').value||"3",10);
-  tempProgram.rounds = parseInt($('rounds').value||"3",10);
-}
-
-/* ====== Builder Events ====== */
-$('progMode').addEventListener('change', ()=>{
-  const mode = $('progMode').value;
-  $('seriesCountWrap').style.display = (mode==='series') ? 'block' : 'none';
-  $('roundsWrap').style.display = (mode==='circuit') ? 'block' : 'none';
-  syncBuilderHeaderToTemp();
-});
-$('seriesCount').addEventListener('input', syncBuilderHeaderToTemp);
-$('rounds').addEventListener('input', syncBuilderHeaderToTemp);
-$('progName').addEventListener('input', ()=>{ syncBuilderHeaderToTemp(); renderProgramList(); });
-
-$('exoType').addEventListener('change', ()=>{
-  const t = $('exoType').value;
-  $('exoDefaultsStrength').style.display = (t==='strength')?'flex':'none';
-  $('exoDefaultsRun').style.display = (t==='running')?'flex':'none';
-});
-
-// Aperçu image live
-$('exoImg').addEventListener('input', ()=>{
-  const url = $('exoImg').value.trim();
-  const wrap = $('imgPreviewWrap');
-  const img  = $('imgPreview');
-  if(!url){ wrap.style.display = 'none'; img.src = ''; return; }
-  img.onload = ()=> { wrap.style.display = 'block'; };
-  img.onerror = ()=> { wrap.style.display = 'none'; img.src=''; };
-  img.src = url;
-});
-
-$('addExoToCatalog').addEventListener('click', ()=>{
-  const name = $('exoName').value.trim();
-  const type = $('exoType').value;
-  const img  = $('exoImg').value.trim();
-  if(!name){ toast("Nom d’exercice requis"); return; }
-  if(type==='strength'){
-    catalog.push({ name, type, img, hint: $('exoHint').value.trim() });
-  }else{
-    const dist = parseFloat($('exoDist').value||"");
-    const time = parseFloat($('exoTime').value||"");
-    catalog.push({ name, type, img, dist:isNaN(dist)?undefined:dist, time:isNaN(time)?undefined:time });
-  }
-  save(CATALOG_KEY, catalog);
-  $('exoName').value=''; $('exoImg').value=''; $('exoHint').value='';
-  $('exoDist').value=''; $('exoTime').value='';
-  $('imgPreviewWrap').style.display='none'; $('imgPreview').src='';
-  renderCatalog(); toast("Exercice ajouté au catalogue");
-});
-
-function addCatalogToProgram(i){
-  const c = catalog[i];
-  syncBuilderHeaderToTemp();
-  if(!tempProgram.name){ toast("Donne un nom au programme d’abord"); return; }
-  tempProgram.exercises.push({...c});
-  renderProgramList();
-}
-
-function moveEx(idx, dir){
-  const p = programs[tempProgram.name] || tempProgram;
-  const arr = p.exercises;
-  const j = idx+dir;
-  if(j<0 || j>=arr.length) return;
-  [arr[idx], arr[j]] = [arr[j], arr[idx]];
-  renderProgramList();
-}
-function removeEx(idx){
-  const p = programs[tempProgram.name] || tempProgram;
-  p.exercises.splice(idx,1);
-  renderProgramList();
-}
-
-$('saveProgramBtn').addEventListener('click', ()=>{
-  syncBuilderHeaderToTemp();
-  if(!tempProgram.name){ toast("Nom du programme manquant"); return; }
-  if(!tempProgram.exercises.length){ toast("Ajoute au moins un exercice"); return; }
-  programs[tempProgram.name] = JSON.parse(JSON.stringify(tempProgram));
-  save(PROGS_KEY, programs);
-  refreshProgramSelects();
-  toast("Programme enregistré / mis à jour");
-});
-
-$('loadProgramBtn').addEventListener('click', ()=>{
-  const names = Object.keys(programs);
-  if(!names.length){ toast("Aucun programme sauvegardé"); return; }
-  const ask = prompt("Nom exact du programme à charger :", names[0]);
-  if(!ask || !programs[ask]){ toast("Introuvable"); return; }
-  tempProgram = JSON.parse(JSON.stringify(programs[ask]));
-  $('progName').value = tempProgram.name;
-  $('progMode').value = tempProgram.mode;
-  $('seriesCount').value = tempProgram.seriesPerEx;
-  $('rounds').value = tempProgram.rounds;
-  $('seriesCountWrap').style.display = (tempProgram.mode==='series')?'block':'none';
-  $('roundsWrap').style.display = (tempProgram.mode==='circuit')?'block':'none';
-  renderProgramList();
-  toast("Programme chargé dans l’éditeur");
-});
-
-$('clearProgramBtn').addEventListener('click', ()=>{
-  tempProgram = { name:$('progName').value.trim()||"", mode:$('progMode').value, seriesPerEx:3, rounds:3, exercises:[] };
-  renderProgramList();
-});
-
-/* ====== Import GitHub ====== */
-$('ghScanBtn').addEventListener('click', syncFromGitHub);
-
-async function syncFromGitHub(){
-  const owner  = $('ghOwner').value.trim();
-  const repo   = $('ghRepo').value.trim();
-  const branch = $('ghBranch').value.trim() || 'main';
-  const path   = $('ghPath').value.trim() || 'images';
-  const defType= $('ghDefaultType').value;
-
-  if(!owner || !repo){ toast("Owner et repo requis"); return; }
-
-  const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`;
-
-  $('ghResult').textContent = "⏳ Scan en cours…";
-  try{
-    const res = await fetch(url, {headers:{'Accept':'application/vnd.github+json'}});
-    if(!res.ok){ throw new Error(`HTTP ${res.status}`); }
-    const list = await res.json();
-    const imgs = list.filter(x=> x.type==='file' && /\.(png|jpe?g|webp|gif|svg)$/i.test(x.name));
-
-    let created=0, updated=0;
-    imgs.forEach(file=>{
-      const imgPath = `${path}/${file.name}`;
-      const guessedName = titleFromFilename(file.name);
-      const existingIdx = catalog.findIndex(c=> c.name.toLowerCase() === guessedName.toLowerCase());
-
-      if(existingIdx>=0){
-        // Met à jour l'image si vide ou différent
-        if(!catalog[existingIdx].img || catalog[existingIdx].img !== imgPath){
-          catalog[existingIdx].img = imgPath;
-          updated++;
-        }
-      }else{
-        // Crée un nouvel exercice
-        if(defType==='running'){
-          catalog.push({ name: guessedName, type:'running', img: imgPath, dist:5, time:30 });
-        }else{
-          catalog.push({ name: guessedName, type:'strength', img: imgPath, hint:"" });
-        }
-        created++;
-      }
-    });
-
-    save(CATALOG_KEY, catalog);
-    renderCatalog();
-    $('ghResult').textContent = `✅ Terminé : ${created} créé(s), ${updated} mis à jour — dans “${path}/” sur ${branch}`;
-    toast("Catalogue synchronisé !");
-  }catch(e){
-    console.error(e);
-    $('ghResult').textContent = `❌ Erreur: ${e.message}. Vérifie owner/repo/branche/chemin et que le repo est public.`;
-    toast("Échec import GitHub");
-  }
-}
-
-/* ====== Lancer une séance ====== */
-$('startSessionBtn').addEventListener('click', ()=>{
-  const key = $('selectProgram').value;
-  if(!key || !programs[key]){ toast("Sélectionne un programme"); return; }
-  renderSession(programs[key]);
-  $('sessionCard').style.display = 'block';
-  freeLines = [];
-  renderFree();
-});
-
-/* ====== Rendu séance ====== */
-function renderSession(p){
-  const zone = $('exercises'); zone.innerHTML = "";
-  const mode = p.mode;
-  const seriesPerEx = p.seriesPerEx || 3;
-  const rounds = p.rounds || 3;
-
-  const last = load(LAST_KEY) || {};
-  function imgButton(exo){
-    const url = exo.img||"";
-    return url ? ` <button class="btn" onclick="showIllustration('${encodeURIComponent(url)}','${encodeURIComponent(exo.name)}')">🖼️ Illustration</button>` : "";
+  function toggleBuilder(){
+    const card=document.getElementById('builder-card');
+    const collapsed=card.classList.toggle('collapsed');
+    localStorage.setItem(LS_BUILDER_OPEN, collapsed? "0":"1");
   }
 
-  if(mode==='series'){
-    p.exercises.forEach((exo,idx)=>{
-      const hint = (exo.type==='strength' ? (exo.hint||"") : (exo.dist?`${exo.dist}km`:""));
-      let html = `<div class="exercise-entry" id="exo-${idx}">
-        <b>${exo.name}</b> ${imgButton(exo)} ${hint?`<span class="tag">${hint}</span>`:""}<br/>`;
-      if(exo.type==='running'){
-        for(let s=0;s<seriesPerEx;s++){
-          const kd = `runD-${idx}-${s}`, kt = `runT-${idx}-${s}`;
-          html += `<div class="series-row">
-              Série ${s+1} :
-              Distance (km): <input type="number" id="${kd}" value="${last[kd]||""}" placeholder="${exo.dist||""}">
-              Temps (min): <input type="number" id="${kt}" value="${last[kt]||""}" placeholder="${exo.time||""}">
-            </div>`;
-        }
-      }else{
-        for(let s=0;s<seriesPerEx;s++){
-          const kp = `poids-${idx}-${s}`, kr = `rep-${idx}-${s}`;
-          html += `<div class="series-row">
-              Série ${s+1} :
-              Poids : <input type="text" id="${kp}" value="${last[kp]||""}" placeholder="${(exo.hint||'').split('/')[s]||''}">
-              Reps : <input type="number" id="${kr}" value="${last[kr]||""}">
-            </div>`;
-        }
-      }
-      html += `<div class="row">
-          <button class="btn good" onclick="markDone(${idx}, this)">✅ Fait</button>
-          <button class="btn" onclick="startTimer(this,30)">⏱️ 30s</button>
-          <button class="btn" onclick="startTimer(this,60)">⏱️ 1min</button>
-          <span class="timer" id="timer-${idx}"></span>
+  // ---- Storage
+  function loadPrograms(){
+    try{
+      return JSON.parse(localStorage.getItem(LS_KEY)) || {};
+    }catch(e){ return {}; }
+  }
+  function savePrograms(obj){
+    localStorage.setItem(LS_KEY, JSON.stringify(obj));
+  }
+
+  // ---- Builder form
+  function addExercise(){
+    const name = document.getElementById('exName').value.trim();
+    const reps = document.getElementById('exReps').value.trim();
+    const weight = document.getElementById('exWeight').value.trim();
+    const img = document.getElementById('exImg').value.trim();
+
+    if(!name){ toast("Donne un nom à l’exercice 🙂"); return; }
+
+    bufferExercises.push({ name, reps, weight, img });
+    renderExerciseList();
+    document.getElementById('exName').value="";
+    document.getElementById('exReps').value="";
+    document.getElementById('exWeight').value="";
+    document.getElementById('exImg').value="";
+  }
+
+  function removeExercise(idx){
+    bufferExercises.splice(idx,1);
+    renderExerciseList();
+  }
+
+  function renderExerciseList(){
+    const wrap = document.getElementById('exerciseList');
+    if(bufferExercises.length===0){ wrap.innerHTML = '<div class="tiny" style="margin-top:6px">Aucun exercice ajouté pour l’instant.</div>'; return; }
+    wrap.innerHTML = bufferExercises.map((ex,i)=>`
+      <div class="exercise-chip">
+        ${ex.img ? `<img class="img-prev" src="${ex.img}" alt="img" onerror="this.style.display='none'">` : ``}
+        <div style="flex:1">
+          <div><b>${ex.name}</b> ${ex.reps?`· ${ex.reps} reps`:``} ${ex.weight?`· ${ex.weight}`:``}</div>
+          ${ex.img?`<div class="tiny">${ex.img}</div>`:``}
         </div>
-      </div>`;
-      zone.insertAdjacentHTML('beforeend', html);
-    });
-  } else {
-    for(let r=0;r<rounds;r++){
-      let block = `<div class="exercise-entry"><b>Tour ${r+1} / ${rounds}</b>`;
-      p.exercises.forEach((exo,idx)=>{
-        const hint = (exo.type==='strength' ? (exo.hint||"") : (exo.dist?`${exo.dist}km`:""));
-        block += `<div class="series-row">
-          <span class="pill"><b>${exo.name}</b> ${hint?`<span class="tag">${hint}</span>`:""} ${imgButton(exo)}</span>`;
-        if(exo.type==='running'){
-          const kd = `cD-${r}-${idx}`, kt = `cT-${r}-${idx}`;
-          block += `Distance (km): <input type="number" id="${kd}" value="${last[kd]||""}" placeholder="${exo.dist||""}">
-                    Temps (min): <input type="number" id="${kt}" value="${last[kt]||""}" placeholder="${exo.time||""}">`;
-        }else{
-          const kp = `cP-${r}-${idx}`, kr = `cR-${r}-${idx}`;
-          block += `Poids: <input type="text" id="${kp}" value="${last[kp]||""}" placeholder="${(exo.hint||'').split('/')[0]||''}">
-                    Reps: <input type="number" id="${kr}" value="${last[kr]||""}">`;
-        }
-        block += `</div>`;
-      });
-      block += `<div class="row" style="margin-top:6px">
-        <button class="btn" onclick="startTimer(this,60)">⏱️ 1min</button>
-      </div></div>`;
-      zone.insertAdjacentHTML('beforeend', block);
-    }
-  }
-}
-
-/* ====== Exercice libre ====== */
-function addFreeLine(){
-  freeLines.push({ name:"", type:"strength", poids:"", reps:"", dist:"", time:"" });
-  renderFree();
-}
-function clearFree(){ freeLines=[]; renderFree(); }
-function renderFree(){
-  const box = $('freeList'); box.innerHTML="";
-  if(!freeLines.length){ box.innerHTML = `<div class="muted">Aucun exercice libre ajouté.</div>`; return; }
-  freeLines.forEach((f, i)=>{
-    const row = document.createElement('div');
-    row.className="list-item";
-    row.innerHTML = `
-      <input style="flex:1" placeholder="Nom (ex: Squat jump)" value="${f.name}" oninput="freeLines[${i}].name=this.value"/>
-      <select style="width:140px" onchange="freeLines[${i}].type=this.value">
-        <option value="strength" ${f.type==='strength'?'selected':''}>Force</option>
-        <option value="running" ${f.type==='running'?'selected':''}>Running</option>
-      </select>
-      <div class="row" style="gap:6px">
-        <input placeholder="Poids" style="width:90px; display:${f.type==='strength'?'block':'none'}" value="${f.poids}" oninput="freeLines[${i}].poids=this.value"/>
-        <input type="number" placeholder="Reps" style="width:90px; display:${f.type==='strength'?'block':'none'}" value="${f.reps}" oninput="freeLines[${i}].reps=this.value"/>
-        <input type="number" step="0.1" placeholder="km" style="width:90px; display:${f.type==='running'?'block':'none'}" value="${f.dist}" oninput="freeLines[${i}].dist=this.value"/>
-        <input type="number" placeholder="min" style="width:90px; display:${f.type==='running'?'block':'none'}" value="${f.time}" oninput="freeLines[${i}].time=this.value"/>
+        <button class="btn danger" onclick="removeExercise(${i})">Supprimer</button>
       </div>
-      <button class="btn danger" onclick="freeLines.splice(${i},1); renderFree()">🗑️</button>
-    `;
-    row.querySelector('select').addEventListener('change', ()=>renderFree());
-    box.appendChild(row);
-  });
-}
+    `).join("");
+  }
 
-/* ====== Actions séance ====== */
-function markDone(index, btn){ btn.textContent="✅ Terminé"; btn.disabled=true; }
-function startTimer(btn, duration){
-  const id = btn.closest('.exercise-entry').querySelector('.timer');
-  let t = duration; btn.disabled=true; if(id) id.textContent=`${t}s restantes`;
-  const itv = setInterval(()=>{ t--; if(id) id.textContent = t>=0?`${t}s restantes`:""; if(t<0){ clearInterval(itv); btn.disabled=false; } },1000);
-}
+  function resetForm(){
+    editingName = null;
+    bufferExercises = [];
+    document.getElementById('progName').value = "";
+    document.getElementById('execMode').value = "series";
+    renderExerciseList();
+    toast("Formulaire réinitialisé");
+  }
 
-function saveSession(){
-  const progName = $('selectProgram').value;
-  if(!progName || !programs[progName]){ toast("Sélectionne un programme"); return; }
-  const p = programs[progName];
-  const mode = p.mode;
-  const date = new Date().toLocaleString();
+  function saveProgram(){
+    const name = (document.getElementById('progName').value || "").trim();
+    const mode = document.getElementById('execMode').value;
+    if(!name){ toast("Nom du programme requis"); return; }
+    if(bufferExercises.length===0){ toast("Ajoute au moins un exercice"); return; }
 
-  let data = `📅 ${date} – Programme : ${progName} (${mode})\n`;
-  const toLast = {};
-
-  if(mode==='series'){
-    p.exercises.forEach((exo, idx)=>{
-      data += `🔸 ${exo.name} :\n`;
-      if(exo.type==='running'){
-        for(let s=0;s<p.seriesPerEx;s++){
-          const kd = `runD-${idx}-${s}`, kt = `runT-${idx}-${s}`;
-          const d = (document.getElementById(kd)||{}).value || "n.c.";
-          const t = (document.getElementById(kt)||{}).value || "n.c.";
-          toLast[kd]=d; toLast[kt]=t;
-          data += `   ➤ Série ${s+1} – ${d} km en ${t} min\n`;
-        }
-      }else{
-        for(let s=0;s<p.seriesPerEx;s++){
-          const kp = `poids-${idx}-${s}`, kr = `rep-${idx}-${s}`;
-          const P = (document.getElementById(kp)||{}).value || "n.c.";
-          const R = (document.getElementById(kr)||{}).value || "n.c.";
-          toLast[kp]=P; toLast[kr]=R;
-          data += `   ➤ Série ${s+1} – ${R} reps @ ${P}\n`;
-        }
-      }
-    });
-  } else {
-    for(let r=0;r<(p.rounds||3);r++){
-      data += `— Tour ${r+1} —\n`;
-      p.exercises.forEach((exo, idx)=>{
-        if(exo.type==='running'){
-          const kd = `cD-${r}-${idx}`, kt = `cT-${r}-${idx}`;
-          const d = (document.getElementById(kd)||{}).value || "n.c.";
-          const t = (document.getElementById(kt)||{}).value || "n.c.";
-          toLast[kd]=d; toLast[kt]=t;
-          data += `   ${exo.name}: ${d} km en ${t} min\n`;
-        }else{
-          const kp = `cP-${r}-${idx}`, kr = `cR-${r}-${idx}`;
-          const P = (document.getElementById(kp)||{}).value || "n.c.";
-          const R = (document.getElementById(kr)||{}).value || "n.c.";
-          toLast[kp]=P; toLast[kr]=R;
-          data += `   ${exo.name}: ${R} reps @ ${P}\n`;
-        }
-      });
+    const store = loadPrograms();
+    // Si on renomme un programme en cours d’édition
+    if(editingName && editingName !== name){
+      delete store[editingName];
     }
+    store[name] = { mode, exercises: bufferExercises };
+    savePrograms(store);
+    renderProgramList();
+    toast("Programme enregistré ✅");
+    editingName = name;
   }
 
-  // Exos libres
-  if(freeLines.length){
-    data += `➕ Exercices libres :\n`;
-    freeLines.forEach(f=>{
-      if(f.type==='running'){
-        data += `   ${f.name}: ${f.dist||'n.c.'} km en ${f.time||'n.c.'} min\n`;
-      }else{
-        data += `   ${f.name}: ${f.reps||'n.c.'} reps @ ${f.poids||'n.c.'}\n`;
-      }
-    });
+  function renderProgramList(){
+    const list = document.getElementById('programList');
+    const store = loadPrograms();
+    const names = Object.keys(store);
+    if(names.length===0){ list.innerHTML = '<div class="tiny">Aucun programme pour le moment.</div>'; return; }
+
+    list.innerHTML = names.map(n=>{
+      const p = store[n];
+      return `
+        <div class="list-item">
+          <div>
+            <div><b>${n}</b> <span class="pill">${p.mode==="series"?"Séries":"Set/Circuit"}</span></div>
+            <div class="tiny">${p.exercises.length} exercice(s)</div>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" onclick="preview('${encodeURIComponent(n)}')">Voir</button>
+            <button class="btn" onclick="editProgram('${encodeURIComponent(n)}')">Éditer</button>
+            <button class="btn danger" onclick="deleteProgram('${encodeURIComponent(n)}')">Supprimer</button>
+          </div>
+        </div>
+      `;
+    }).join("");
   }
 
-  const old = (localStorage.getItem(HISTORY_KEY)||"");
-  localStorage.setItem(HISTORY_KEY, data + "\n\n" + old);
-  save(LAST_KEY, toLast);
-  toast("💾 Séance enregistrée !");
-  freeLines=[]; renderFree();
-  displayHistory();
-}
+  function preview(nameEnc){
+    const name = decodeURIComponent(nameEnc);
+    const p = loadPrograms()[name];
+    if(!p){ toast("Introuvable"); return; }
+    const lines = p.exercises.map((e,i)=>`• ${i+1}. ${e.name}${e.reps?` — ${e.reps} reps`:``}${e.weight?` — ${e.weight}`:``}`).join("\n");
+    alert(`🏷️ ${name}\nMode: ${p.mode==="series"?"Séries":"Set/Circuit"}\n\n${lines}`);
+  }
 
-/* ====== Historique ====== */
-function displayHistory(){
-  const h = (localStorage.getItem(HISTORY_KEY)||"").trim();
-  const box = $('history'); box.innerHTML="";
-  if(!h){ box.textContent="Aucune séance encore."; return; }
-  const sessions = h.split("\n\n");
-  sessions.forEach((entry, idx)=>{
-    const firstLine = entry.split("\n")[0] || "Séance";
-    const div = document.createElement('div');
-    div.className = "hist-item";
-    div.innerHTML = `
-      <pre>${entry}</pre>
-      <div class="right">
-        <button class="btn danger" onclick="deleteSession(${idx}, '${encodeURIComponent(firstLine)}')">🗑️ Supprimer</button>
-      </div>`;
-    box.appendChild(div);
-  });
-}
-function deleteSession(index, summaryEnc){
-  const summary = decodeURIComponent(summaryEnc);
-  if(!confirm(`Supprimer définitivement ?\n\n${summary}`)){ toast("Suppression annulée"); return; }
-  let h = (localStorage.getItem(HISTORY_KEY)||"").trim();
-  let sessions = h ? h.split("\n\n") : [];
-  sessions.splice(index,1);
-  localStorage.setItem(HISTORY_KEY, sessions.join("\n\n"));
-  displayHistory();
-  toast("Séance supprimée 🗑️");
-}
+  function editProgram(nameEnc){
+    const name = decodeURIComponent(nameEnc);
+    const p = loadPrograms()[name];
+    if(!p){ toast("Introuvable"); return; }
+    editingName = name;
+    document.getElementById('progName').value = name;
+    document.getElementById('execMode').value = p.mode || "series";
+    bufferExercises = (p.exercises || []).map(e=>({...e}));
+    renderExerciseList();
 
-/* ====== Modal image ====== */
-function showIllustration(urlEnc, nameEnc){
-  const url=decodeURIComponent(urlEnc), name=decodeURIComponent(nameEnc);
-  $('imgView').src=url; $('imgTitle').textContent=name; $('imgModal').classList.add('open');
-}
-function hideModal(){ $('imgModal').classList.remove('open'); $('imgView').src=""; }
-function closeModal(e){ if(e.target.id==='imgModal') hideModal(); }
+    // ouvrir la section si elle est fermée
+    const card=document.getElementById('builder-card');
+    if(card.classList.contains('collapsed')) toggleBuilder();
+    toast("Edition du programme chargée ✏️");
+  }
 
-/* ====== Stats page btn ====== */
-$('openStats').addEventListener('click', ()=> window.open('graph.html','_blank') );
+  function deleteProgram(nameEnc){
+    const name = decodeURIComponent(nameEnc);
+    if(!confirm(`Supprimer définitivement « ${name} » ?`)) return;
+    const store = loadPrograms();
+    delete store[name];
+    savePrograms(store);
+    if(editingName===name) resetForm();
+    renderProgramList();
+    toast("Programme supprimé 🗑️");
+  }
 
-/* ====== Init ====== */
-displayQuote();
-refreshProgramSelects();
-renderCatalog();
-renderProgramList();
-
-const first = Object.keys(programs)[0];
-if(first){
-  tempProgram = JSON.parse(JSON.stringify(programs[first]));
-  $('progName').value = tempProgram.name;
-  $('progMode').value = tempProgram.mode;
-  $('seriesCount').value = tempProgram.seriesPerEx;
-  $('rounds').value = tempProgram.rounds;
-  $('seriesCountWrap').style.display = (tempProgram.mode==='series')?'block':'none';
-  $('roundsWrap').style.display = (tempProgram.mode==='circuit')?'block':'none';
-  renderProgramList();
-}
-displayHistory();
+  // ---- Init
+  (function init(){
+    // état d’ouverture/fermeture mémorisé
+    const open = localStorage.getItem(LS_BUILDER_OPEN);
+    if(open==="0"){ document.getElementById('builder-card').classList.add('collapsed'); }
+    renderExerciseList();
+    renderProgramList();
+  })();
 </script>
 </body>
 </html>
