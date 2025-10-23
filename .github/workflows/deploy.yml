@@ -2,7 +2,7 @@ name: Deploy Vite to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
@@ -25,16 +25,16 @@ jobs:
         with:
           node-version: 20
 
-      # No lockfile required
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      # Pas de lockfile -> npm install (pas npm ci)
+      - name: Install deps
+        run: npm install
 
       - name: Build
         run: npm run build
 
-      # SPA fallback for client-side routing
-      - name: Add 404 fallback
-        run: cp docs/index.html docs/404.html
+      # Fallback SPA pour GitHub Pages (évite la page noire au refresh)
+      - name: Add SPA fallback
+        run: cp ./docs/index.html ./docs/404.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -47,7 +47,9 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
