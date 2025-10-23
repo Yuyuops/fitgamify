@@ -3,7 +3,6 @@ name: Deploy Vite to GitHub Pages
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,26 +17,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - name: Install
-        run: npm ci
+      # No lockfile required
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
 
       - name: Build
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: npm run build
+
+      # SPA fallback for client-side routing
+      - name: Add 404 fallback
+        run: cp docs/index.html docs/404.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: ./docs
 
   deploy:
     needs: build
@@ -46,5 +48,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
