@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Vite to GitHub Pages
 
 on:
   push:
@@ -18,32 +18,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          # ❌ pas de cache npm -> pas besoin de lockfile
+          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install --no-fund --no-audit
+      - name: Install
+        run: npm ci
 
-      - name: Build site
+      - name: Build
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: npm run build
-        # Avec ton vite.config, la sortie est dans "docs/"
-
-      - name: Ensure 404.html exists in docs (SPA routing)
-        run: |
-          if [ ! -f docs/404.html ]; then
-            if [ -f 404.html ]; then cp 404.html docs/404.html; else echo "<!doctype html><meta http-equiv=refresh content='0; url=/fitgamify/'>" > docs/404.html; fi
-          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./docs
+          path: ./dist
 
   deploy:
     needs: build
