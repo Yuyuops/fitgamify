@@ -15,9 +15,8 @@ export default defineConfig(({ mode }) => {
       alias: { '@': path.resolve(__dirname, '.') }
     },
     // ⬇️ IMPORTANT for GitHub Pages
-    base: '/fitgamify/',     // <- EXACTLY your repo name
-    build: {
-      outDir: 'dist'         // <- let Actions deploy /dist
+    base: '/fitgamify/',
+build: { outDir: 'docs' }
     }
   }
 })
