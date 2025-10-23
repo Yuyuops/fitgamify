@@ -1,0 +1,14 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Redirecting…</title>
+<script>
+  (function() {
+    // GH Pages SPA redirect (keeps subpath /fitgamify/)
+    var segment = '/fitgamify';
+    var dest = window.location.protocol + '//' + window.location.host + segment + '/';
+    var path = window.location.pathname.replace(segment, '');
+    var search = window.location.search || '';
+    var hash = window.location.hash || '';
+    window.location.replace(dest + (path.startsWith('/') ? path.slice(1) : path) + search + hash);
+  })();
+</script>
