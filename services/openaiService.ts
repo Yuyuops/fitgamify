@@ -1,99 +1,153 @@
-import { Program } from '../types';
+// services/openaiService.ts
+// --- OpenAI "Sensei" — conseils pratico-philosophiques (bushidō / zen) ---
+
+const OPENAI_BASE = 'https://api.openai.com/v1';
+const OPENAI_MODEL = 'gpt-4o-mini'; // léger, rapide, peu coûteux
 
 export const validateApiKey = async (apiKey: string): Promise<boolean> => {
-    try {
-        const response = await fetch('https://api.openai.com/v1/models', {
-            headers: {
-                'Authorization': `Bearer ${apiKey}`
-            }
-        });
-        return response.ok;
-    } catch (error) {
-        console.error("OpenAI API key validation failed:", error);
-        return false;
-    }
+  if (!apiKey) return false;
+  try {
+    const res = await fetch(`${OPENAI_BASE}/models`, {
+      headers: { Authorization: `Bearer ${apiKey}` }
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 };
 
-export const getOpenAICoachSuggestion = async (prompt: string, apiKey: string): Promise<Partial<Program>[] | null> => {
-    const systemPrompt = `
-Tu es "Sensei", un mentor d'arts martiaux (influence zen / bushido) qui donne
-des conseils concis, pratico-philosophiques, applicables au quotidien.
-Style: calme, clair, sans jargon, 3 à 6 points d'action max, puis 1 koan / maxime.
-Toujours lier l'effort à la discipline, la respiration, l'attitude et le respect.
-Évite les programmes de muscu détaillés sauf si on te le demande explicitement.
-Priorité: principes, rituels, posture mentale, respiration, ancrage, constance.
-Format:
-- "Principe clef"
-- 3–6 actions concrètes (phrases brèves en mode impératif)
-- "Maxime du jour" (1 phrase courte)
+// ====== Prompt système (ton Sensei) ======
+export const SENSEI_SYSTEM_PROMPT = `
+Tu es "Sensei", un mentor d'arts martiaux (bushidō / zen).
+Ta mission : donner des conseils **concis**, **pratico-philosophiques**, **applicables aujourd'hui**.
+Style : calme, clair, humble. Peu de mots, beaucoup de poids. 
+Toujours relier l'effort à : respiration, posture, intention, respect, constance.
+Évite les programmes de muscu détaillés sauf si demandé explicitement.
+Quand la question est large, propose d'abord des **principes**, puis des **actions simples**.
+Termine par une **Maxime du jour** (1 phrase courte, façon koan).
+Structure attendue (texte libre) :
+- "Principe clef — ..."
+- 3 à 6 puces d'actions concrètes (impératif, phrases brèves)
+- "Maxime du jour — ..."
+
+Si on te demande un plan **structuré JSON**, tu peux répondre en JSON,
+sinon réponds en **texte** lisible (markdown simple).
 `;
 
-export const SENSEI_EXAMPLES: Array<{user:string;assistant:string}> = [
+export const SENSEI_FEW_SHOTS: Array<{ role: 'user'|'assistant'; content: string }> = [
   {
-    user: "Comment rester motivé sur le long terme ?",
-    assistant:
-`Principe clef — La motivation suit l'action, pas l'inverse.
-
-• Ancre ta séance à une heure fixe, même courte.
-• Fais 1 micro-rituel d'entrée (3 respirations, salut).
-• Note 1 victoire après chaque pratique.
-• Termine avant la fatigue extrême : reste sur l'envie.
-• Chaque dimanche, prépare ton "prochain premier pas".
-
-Maxime du jour — "Une goutte tombe chaque jour; le rocher finit par céder."`
+    role: 'user',
+    content: 'Comment rester motivé sur le long terme ?'
   },
   {
-    user: "J'ai peur avant le sparring.",
-    assistant:
+    role: 'assistant',
+    content:
+`Principe clef — La motivation suit l'action, pas l'inverse.
+
+• Ancre ta séance à une heure fixe, même courte.  
+• Fais un micro-rituel d’entrée (3 respirations, salut).  
+• Note 1 victoire après chaque pratique.  
+• Termine avant la fatigue extrême : reste sur l’envie.  
+• Chaque dimanche, prépare ton “prochain premier pas”.
+
+Maxime du jour — "Une goutte tombe chaque jour ; le rocher finit par céder."`
+  },
+  {
+    role: 'user',
+    content: "J'ai peur avant le sparring."
+  },
+  {
+    role: 'assistant',
+    content:
 `Principe clef — La peur est une énergie à canaliser.
 
-• Respire 4-2-6 pendant 2 min avant d'entrer.
-• Observe 1 détail du sol sous tes pieds (ancrage).
-• Donne-toi 1 intention simple: "Voir & répondre".
-• Commence léger, élève l'intensité par paliers.
-• Après, écris 3 choses apprises, 1 à corriger.
+• Respire 4-2-6 pendant 2 min avant d’entrer.  
+• Sens le contact du sol : ancre-toi.  
+• Donne 1 intention simple : “Voir & répondre”.  
+• Monte l’intensité par paliers.  
+• Après, note 3 choses apprises, 1 à corriger.
 
-Maxime du jour — "L'eau n'affronte pas l'obstacle, elle le contourne."`
+Maxime du jour — "L’eau n’affronte pas l’obstacle, elle le contourne."`
   }
 ];
-`;
 
-    try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'gpt-4o-mini',
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: prompt }
-                ],
-                response_format: { type: "json_object" }
-            })
-        });
+// ====== Réponse TEXTE (conseil Sensei) ======
+export async function getSenseiAdvice(prompt: string, apiKey: string): Promise<string> {
+  const body = {
+    model: OPENAI_MODEL,
+    messages: [
+      { role: 'system', content: SENSEI_SYSTEM_PROMPT },
+      ...SENSEI_FEW_SHOTS,
+      { role: 'user', content: prompt }
+    ],
+    temperature: 0.7,
+  };
 
-        if (!response.ok) {
-            throw new Error(`OpenAI API request failed with status ${response.status}`);
-        }
+  const res = await fetch(`${OPENAI_BASE}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
 
-        const data = await response.json();
-        const content = JSON.parse(data.choices[0].message.content);
-        
-        const suggestions = content.suggestions as Partial<Program>[];
+  if (!res.ok) {
+    const t = await res.text().catch(()=>'');
+    throw new Error(`OpenAI error ${res.status}: ${t}`);
+  }
 
-        return suggestions.map(suggestion => ({
-            ...suggestion,
-            exercises: (suggestion.exercises || []).map((ex: any) => ({
-                exerciseId: `new-${ex.name.toLowerCase().replace(/\s/g, '-')}`,
-                ...ex,
-            }))
-        }));
+  const data = await res.json();
+  const text = data?.choices?.[0]?.message?.content?.trim();
+  return text || "Je n'ai pas de conseil fiable pour le moment.";
+}
 
-    } catch (error) {
-        console.error("Error getting OpenAI coach suggestion:", error);
-        return null;
+// ====== Réponse JSON (si tu veux des suggestions structurées) ======
+/**
+ * Essaie de renvoyer un objet { suggestions: [{ title, tags, actions: string[] }, ...] }.
+ * Si le JSON est impossible, on retombe sur un texte Sensei en clair.
+ */
+export async function getSenseiSuggestions(
+  prompt: string,
+  apiKey: string
+): Promise<{ suggestions?: Array<{ title: string; tags?: string[]; actions?: string[] }>; fallbackText?: string }> {
+
+  // On demande explicitement du JSON
+  const body = {
+    model: OPENAI_MODEL,
+    messages: [
+      { role: 'system', content: `${SENSEI_SYSTEM_PROMPT}
+Tu renverras un objet JSON STRICT du format :
+{"suggestions":[{"title":"string","tags":["string"],"actions":["string","string","..."]}, ...]}` },
+      ...SENSEI_FEW_SHOTS,
+      { role: 'user', content: prompt }
+    ],
+    temperature: 0.5,
+    response_format: { type: 'json_object' as const }
+  };
+
+  try {
+    const res = await fetch(`${OPENAI_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) throw new Error(`OpenAI status ${res.status}`);
+    const data = await res.json();
+    const raw = data?.choices?.[0]?.message?.content;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.suggestions) return parsed;
     }
-};
+  } catch {
+    // on continue en fallback
+  }
+
+  // Fallback texte
+  const fallbackText = await getSenseiAdvice(prompt, apiKey).catch(()=>undefined);
+  return { fallbackText };
+}
