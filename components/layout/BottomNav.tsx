@@ -1,34 +1,47 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { HomeIcon, BoltIcon, ChartBarIcon, ClipboardDocumentListIcon, SparklesIcon } from '@heroicons/react/24/outline';
-
-const navItems = [
-  { path: '/', label: 'Dojo', icon: HomeIcon },
-  { path: '/programs', label: 'Training', icon: BoltIcon },
-  { path: '/supplements', label: 'Suivi', icon: ClipboardDocumentListIcon },
-  { path: '/stats', label: 'Stats', icon: ChartBarIcon },
-  { path: '/coach', label: 'Sensei', icon: SparklesIcon },
-  { path: '/journal', label: 'journal', icon: JournalIcon },
-];
+import {
+  HomeIcon,
+  BoltIcon,
+  BeakerIcon,
+  ChartBarIcon,
+  SparklesIcon,
+  BookOpenIcon, // ✅ on utilise ça pour le Journal
+} from '@heroicons/react/24/solid';
 
 const BottomNav: React.FC = () => {
+  const base = "flex flex-col items-center justify-center gap-1 text-xs";
+  const active = "text-white";
+  const inactive = "text-dojo-text-muted";
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-dojo-card border-t border-dojo-border z-50">
-      <div className="flex justify-around max-w-lg mx-auto">
-        {navItems.map(({ path, label, icon: Icon }) => (
-          <NavLink
-            key={path}
-            to={path}
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full pt-3 pb-2 text-xs transition-colors duration-200 ${
-                isActive ? 'text-dojo-glow-blue' : 'text-dojo-text-muted hover:text-dojo-text'
-              }`
-            }
-          >
-            <Icon className="h-6 w-6 mb-1" />
-            <span>{label}</span>
-          </NavLink>
-        ))}
+    <nav className="fixed bottom-0 left-0 right-0 bg-dojo-panel border-t border-dojo-border py-2 z-50">
+      <div className="mx-auto max-w-3xl grid grid-cols-5">
+        <NavLink to="/" className={({isActive}) => `${base} ${isActive ? active : inactive}`}>
+          <HomeIcon className="w-6 h-6" />
+          <span>Dojo</span>
+        </NavLink>
+
+        <NavLink to="/training" className={({isActive}) => `${base} ${isActive ? active : inactive}`}>
+          <BoltIcon className="w-6 h-6" />
+          <span>Training</span>
+        </NavLink>
+
+        {/* ✅ Journal */}
+        <NavLink to="/journal" className={({isActive}) => `${base} ${isActive ? active : inactive}`}>
+          <BookOpenIcon className="w-6 h-6" />
+          <span>Journal</span>
+        </NavLink>
+
+        <NavLink to="/stats" className={({isActive}) => `${base} ${isActive ? active : inactive}`}>
+          <ChartBarIcon className="w-6 h-6" />
+          <span>Stats</span>
+        </NavLink>
+
+        <NavLink to="/coach" className={({isActive}) => `${base} ${isActive ? active : inactive}`}>
+          <SparklesIcon className="w-6 h-6" />
+          <span>Sensei</span>
+        </NavLink>
       </div>
     </nav>
   );
