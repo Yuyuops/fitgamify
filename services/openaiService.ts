@@ -1,39 +1,41 @@
-// services/openaiService.ts
+// src/services/openaiService.ts
 import { Program } from '../types';
 
-/** ✅ Export attendu par SettingsPage.tsx */
+/**
+ * Vérifie rapidement la clé OpenAI (pas d'appel sensible, on liste les modèles).
+ */
 export async function validateApiKey(apiKey: string): Promise<boolean> {
   try {
     const res = await fetch('https://api.openai.com/v1/models', {
       headers: { Authorization: `Bearer ${apiKey}` }
     });
     return res.ok;
-  } catch (e) {
-    console.error('OpenAI API key validation failed:', e);
+  } catch {
     return false;
   }
 }
 
-/** Ton implémentation Sensei côté OpenAI */
+/**
+ * Sensei "bushido" : on demande un texte concis avec des puces + une maxime.
+ * On normalise ensuite ce texte en un "pseudo-programme" pour l'affichage existant.
+ */
 export async function getOpenAICoachSuggestion(
   prompt: string,
   apiKey: string
 ): Promise<Partial<Program>[] | null> {
   const systemPrompt = `
-Tu es "Sensei", un mentor d'arts martiaux (influence zen / bushido) qui donne
-des conseils concis, pratico-philosophiques, applicables au quotidien.
-Style: calme, clair, sans jargon, 3 à 6 points d'action max, puis 1 koan / maxime.
-Toujours lier l'effort à la discipline, la respiration, l'attitude et le respect.
-Évite les programmes de muscu détaillés sauf si on te le demande explicitement.
-Priorité: principes, rituels, posture mentale, respiration, ancrage, constance.
-Format:
-- "Principe clef"
-- 3–6 actions concrètes (phrases brèves en mode impératif)
-- "Maxime du jour" (1 phrase courte)
-  `.trim();
+Tu es "Sensei", mentor d'arts martiaux (influence zen/bushido).
+Donne des conseils concis, pratico-philosophiques, applicables tout de suite.
+Style: calme, clair, sans jargon.
+Toujours relier effort, souffle, posture mentale, respect, constance.
+Ne propose PAS un plan de musculation détaillé (sauf demande explicite).
+Format de sortie (texte simple) :
+- 3 à 6 puces d'actions concrètes, à l'impératif
+- puis une dernière ligne commençant par "Maxime :" avec une courte maxime.
+`;
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -41,6 +43,7 @@ Format:
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
+        temperature: 0.7,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
@@ -48,35 +51,55 @@ Format:
       })
     });
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API request failed with status ${response.status}`);
+    if (!res.ok) {
+      console.error('OpenAI request failed with status:', res.status);
+      return null;
     }
 
-    const data = await response.json();
-    const text: string = data.choices?.[0]?.message?.content ?? '';
+    const data = await res.json();
+    const text: string = data?.choices?.[0]?.message?.content ?? '';
 
-    // 🔒 Garde-fou : si le contenu n'est pas un JSON valide, on renvoie une fiche "texte"
-    try {
-      const parsed = JSON.parse(text);
-      const suggestions = (parsed.suggestions ?? []) as Partial<Program>[];
-      return suggestions.map(s => ({
-        ...s,
-        exercises: (s.exercises ?? []).map((ex: any) => ({
-          exerciseId: `new-${(ex.name ?? 'ex').toLowerCase().replace(/\s+/g, '-')}`,
-          ...ex
-        }))
-      }));
-    } catch {
-      return [
-        {
-          name: 'Conseil du Sensei',
-          category: ['Mindset', 'Discipline'],
-          notes: text
-        }
-      ];
+    // On transforme les lignes en items affichables comme des "exercices"
+    const lines = text
+      .split('\n')
+      .map(l => l.replace(/^[-•]\s*/, '').trim())
+      .filter(Boolean);
+
+    // Sépare les puces de la maxime finale si présente
+    const adviceLines: string[] = [];
+    let maximeLine = '';
+
+    for (const l of lines) {
+      if (/^maxime\s*:/i.test(l)) {
+        maximeLine = l.replace(/^maxime\s*:\s*/i, '').trim();
+      } else {
+        adviceLines.push(l);
+      }
     }
-  } catch (error) {
-    console.error('Error getting OpenAI coach suggestion:', error);
+
+    const exercises = adviceLines.map((line, idx) => ({
+      exerciseId: `sensei-${idx}`,
+      name: line,
+      target: {} as any
+    }));
+
+    if (maximeLine) {
+      exercises.push({
+        exerciseId: `sensei-maxime`,
+        name: `Maxime — ${maximeLine}`,
+        target: {} as any
+      });
+    }
+
+    const suggestion: Partial<Program> = {
+      name: 'Conseils du Sensei',
+      category: ['Philosophie', 'Motivation'],
+      exercises
+    };
+
+    return [suggestion];
+  } catch (err) {
+    console.error('Error in getOpenAICoachSuggestion:', err);
     return null;
   }
 }
