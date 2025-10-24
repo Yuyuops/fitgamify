@@ -8,6 +8,7 @@ const navItems = [
   { path: '/supplements', label: 'Suivi', icon: ClipboardDocumentListIcon },
   { path: '/stats', label: 'Stats', icon: ChartBarIcon },
   { path: '/coach', label: 'Sensei', icon: SparklesIcon },
+  { path: '/journal', label: 'journal', icon: JournalIcon },
 ];
 
 const BottomNav: React.FC = () => {
