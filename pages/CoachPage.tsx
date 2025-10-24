@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getAICoachSuggestion } from '../services/geminiService';
-import { getSenseiSuggestions } from '../services/openaiService';
+import { getOpenAICoachSuggestion } from '../services/openaiService';
 import { Program } from '../types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
