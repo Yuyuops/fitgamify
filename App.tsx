@@ -10,6 +10,7 @@ import SupplementsPage from './pages/SupplementsPage';
 import ProgramDetailPage from './pages/ProgramDetailPage';
 import WorkoutPage from './pages/WorkoutPage';
 import SettingsPage from './pages/SettingsPage';
+import JournalPage from './pages/JournalPage';
 import { MOCK_PROGRAMS, MOCK_DAILY_LOGS, INITIAL_SUPPLEMENTS } from './constants';
 import { Program, Supplement, DailyLog } from './types';
 
@@ -41,6 +42,7 @@ const App: React.FC = () => {
               <Route path="/supplements" element={<SupplementsPage supplements={supplements} setSupplements={setSupplements} dailyLogs={dailyLogs} setDailyLogs={setDailyLogs} />} />
               <Route path="/stats" element={<StatsPage dailyLogs={dailyLogs} setDailyLogs={setDailyLogs} supplements={supplements}/>} />
               <Route path="/coach" element={<CoachPage />} />
+              <Route path="/journal" element={<JournalPage/>} />
               <Route path="/settings" element={<SettingsPage />} />
             </Routes>
           </main>
